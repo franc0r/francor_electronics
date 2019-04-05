@@ -1,0 +1,23 @@
+EESchema-LIBRARY Version 2.4
+#encoding utf-8
+#
+# Conn_01x04_4mm
+#
+DEF Conn_01x04_4mm J 0 40 Y Y 1 F N
+F0 "J" 0 600 50 H V C CNN
+F1 "Conn_01x04_4mm" 0 -100 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+DRAW
+S -50 -50 50 -50 0 1 0 N
+S -50 500 -50 -50 0 1 0 N
+S 50 -50 50 500 0 1 0 N
+S 50 500 -50 500 0 1 0 N
+X ~ 1 150 0 100 L 50 50 0 0 B
+X ~ 2 150 150 100 L 50 50 0 0 B
+X ~ 3 150 300 100 L 50 50 0 0 B
+X ~ 4 150 450 100 L 50 50 0 0 B
+ENDDRAW
+ENDDEF
+#
+#End Library
