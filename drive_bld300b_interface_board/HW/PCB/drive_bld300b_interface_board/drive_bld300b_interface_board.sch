@@ -15,23 +15,23 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L Connector_Generic:Conn_02x19_Odd_Even J?
+L Connector_Generic:Conn_02x19_Odd_Even J1
 U 1 1 5CAA175A
 P 2100 6150
-F 0 "J?" H 2150 7150 50  0000 C CNN
+F 0 "J1" H 2150 7150 50  0000 C CNN
 F 1 "N_CN7" H 2150 5150 50  0000 C CNN
-F 2 "" H 2100 6150 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x19_P2.54mm_Vertical" H 2100 6150 50  0001 C CNN
 F 3 "~" H 2100 6150 50  0001 C CNN
 	1    2100 6150
 	1    0    0    -1  
 $EndComp
 $Comp
-L Connector_Generic:Conn_02x19_Odd_Even J?
+L Connector_Generic:Conn_02x19_Odd_Even J3
 U 1 1 5CAA2D45
 P 4000 6150
-F 0 "J?" H 4050 7150 50  0000 C CNN
+F 0 "J3" H 4050 7150 50  0000 C CNN
 F 1 "N_CN10" H 4050 5150 50  0000 C CNN
-F 2 "" H 4000 6150 50  0001 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_2x19_P2.54mm_Vertical" H 4000 6150 50  0001 C CNN
 F 3 "~" H 4000 6150 50  0001 C CNN
 	1    4000 6150
 	1    0    0    -1  
@@ -47,10 +47,10 @@ Wire Wire Line
 Wire Wire Line
 	2400 5550 2750 5550
 $Comp
-L power:GND #PWR?
+L power:GND #PWR0101
 U 1 1 5CAA9119
 P 2750 5550
-F 0 "#PWR?" H 2750 5300 50  0001 C CNN
+F 0 "#PWR0101" H 2750 5300 50  0001 C CNN
 F 1 "GND" V 2755 5422 50  0000 R CNN
 F 2 "" H 2750 5550 50  0001 C CNN
 F 3 "" H 2750 5550 50  0001 C CNN
@@ -58,10 +58,10 @@ F 3 "" H 2750 5550 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L power:GND #PWR?
+L power:GND #PWR0102
 U 1 1 5CAA9679
 P 2750 6200
-F 0 "#PWR?" H 2750 5950 50  0001 C CNN
+F 0 "#PWR0102" H 2750 5950 50  0001 C CNN
 F 1 "GND" V 2755 6072 50  0000 R CNN
 F 2 "" H 2750 6200 50  0001 C CNN
 F 3 "" H 2750 6200 50  0001 C CNN
@@ -72,10 +72,10 @@ Connection ~ 2750 6200
 Wire Wire Line
 	2750 6200 2750 6250
 $Comp
-L power:GND #PWR?
+L power:GND #PWR0103
 U 1 1 5CAA9A15
 P 1450 6150
-F 0 "#PWR?" H 1450 5900 50  0001 C CNN
+F 0 "#PWR0103" H 1450 5900 50  0001 C CNN
 F 1 "GND" V 1455 6022 50  0000 R CNN
 F 2 "" H 1450 6150 50  0001 C CNN
 F 3 "" H 1450 6150 50  0001 C CNN
@@ -94,10 +94,10 @@ NoConn ~ 2400 5650
 NoConn ~ 2400 5450
 NoConn ~ 3800 5550
 $Comp
-L power:GND #PWR?
+L power:GND #PWR0104
 U 1 1 5CAA3886
 P 3600 5650
-F 0 "#PWR?" H 3600 5400 50  0001 C CNN
+F 0 "#PWR0104" H 3600 5400 50  0001 C CNN
 F 1 "GND" V 3605 5522 50  0000 R CNN
 F 2 "" H 3600 5650 50  0001 C CNN
 F 3 "" H 3600 5650 50  0001 C CNN
@@ -109,10 +109,10 @@ Wire Wire Line
 Wire Wire Line
 	4300 6750 4600 6750
 $Comp
-L power:GND #PWR?
+L power:GND #PWR0105
 U 1 1 5CAA4724
 P 4600 6750
-F 0 "#PWR?" H 4600 6500 50  0001 C CNN
+F 0 "#PWR0105" H 4600 6500 50  0001 C CNN
 F 1 "GND" V 4605 6622 50  0000 R CNN
 F 2 "" H 4600 6750 50  0001 C CNN
 F 3 "" H 4600 6750 50  0001 C CNN
@@ -122,10 +122,10 @@ $EndComp
 Wire Wire Line
 	4300 6150 4600 6150
 $Comp
-L power:GND #PWR?
+L power:GND #PWR0106
 U 1 1 5CAA516B
 P 4600 6150
-F 0 "#PWR?" H 4600 5900 50  0001 C CNN
+F 0 "#PWR0106" H 4600 5900 50  0001 C CNN
 F 1 "GND" V 4605 6022 50  0000 R CNN
 F 2 "" H 4600 6150 50  0001 C CNN
 F 3 "" H 4600 6150 50  0001 C CNN
@@ -229,7 +229,7 @@ Wire Wire Line
 Text Label 3350 6650 0    50   ~ 0
 M3_ALM
 Text Label 1450 6950 0    50   ~ 0
-M3_SPEED
+M3_SPD
 Wire Wire Line
 	1450 6950 1900 6950
 Wire Wire Line
@@ -267,7 +267,7 @@ M4_ALM
 Wire Wire Line
 	1900 7050 1450 7050
 Text Label 1450 7050 0    50   ~ 0
-M4_SPEED
+M4_SPD
 Wire Wire Line
 	4300 5350 4650 5350
 Wire Wire Line
@@ -297,4 +297,316 @@ NoConn ~ 3800 6950
 NoConn ~ 3800 7050
 NoConn ~ 3800 6550
 NoConn ~ 3800 6750
+$Comp
+L Connector:DB15_Female_MountingHoles J2
+U 1 1 5CADFB02
+P 2450 2900
+F 0 "J2" H 2450 3750 50  0000 C CNN
+F 1 "M1" V 2650 2900 50  0000 C CNN
+F 2 "Connector_Dsub:DSUB-15_Female_Horizontal_P2.77x2.84mm_EdgePinOffset7.70mm_Housed_MountingHolesOffset9.12mm" H 2450 2900 50  0001 C CNN
+F 3 " ~" H 2450 2900 50  0001 C CNN
+	1    2450 2900
+	-1   0    0    -1  
+$EndComp
+Text Label 3250 2800 2    50   ~ 0
+M1_EN
+Text Label 3250 3000 2    50   ~ 0
+M1_BRK
+Text Label 3250 2600 2    50   ~ 0
+M1_DIR
+Text Label 3250 2200 2    50   ~ 0
+M1_PWM
+Text Label 3250 3400 2    50   ~ 0
+M1_ALM
+Text Label 3250 3200 2    50   ~ 0
+M1_SPD
+Text Label 3250 3100 2    50   ~ 0
+M1_HA
+Text Label 3250 3300 2    50   ~ 0
+M1_HB
+Text Label 3250 3500 2    50   ~ 0
+M1_HC
+Wire Wire Line
+	2750 2400 3300 2400
+$Comp
+L power:GND #PWR02
+U 1 1 5CAEBBA6
+P 3300 2400
+F 0 "#PWR02" H 3300 2150 50  0001 C CNN
+F 1 "GND" V 3305 2272 50  0000 R CNN
+F 2 "" H 3300 2400 50  0001 C CNN
+F 3 "" H 3300 2400 50  0001 C CNN
+	1    3300 2400
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	2750 2200 3250 2200
+Wire Wire Line
+	2750 2600 3250 2600
+Wire Wire Line
+	2750 2800 3250 2800
+Wire Wire Line
+	2750 3000 3250 3000
+Wire Wire Line
+	2750 3200 3250 3200
+Wire Wire Line
+	2750 3400 3250 3400
+Wire Wire Line
+	3250 3500 2750 3500
+Wire Wire Line
+	2750 3300 3250 3300
+Wire Wire Line
+	2750 3100 3250 3100
+$Comp
+L power:GND #PWR01
+U 1 1 5CB03E80
+P 2450 3900
+F 0 "#PWR01" H 2450 3650 50  0001 C CNN
+F 1 "GND" H 2455 3727 50  0000 C CNN
+F 2 "" H 2450 3900 50  0001 C CNN
+F 3 "" H 2450 3900 50  0001 C CNN
+	1    2450 3900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2450 3800 2450 3900
+$Comp
+L Connector:DB15_Female_MountingHoles J4
+U 1 1 5CB15FF1
+P 4050 2900
+F 0 "J4" H 4050 3750 50  0000 C CNN
+F 1 "M2" V 4250 2900 50  0000 C CNN
+F 2 "Connector_Dsub:DSUB-15_Female_Horizontal_P2.77x2.84mm_EdgePinOffset7.70mm_Housed_MountingHolesOffset9.12mm" H 4050 2900 50  0001 C CNN
+F 3 " ~" H 4050 2900 50  0001 C CNN
+	1    4050 2900
+	-1   0    0    -1  
+$EndComp
+Text Label 4850 2800 2    50   ~ 0
+M2_EN
+Text Label 4850 3000 2    50   ~ 0
+M2_BRK
+Text Label 4850 2600 2    50   ~ 0
+M2_DIR
+Text Label 4850 2200 2    50   ~ 0
+M2_PWM
+Text Label 4850 3400 2    50   ~ 0
+M2_ALM
+Text Label 4850 3100 2    50   ~ 0
+M2_HA
+Text Label 4850 3300 2    50   ~ 0
+M2_HB
+Text Label 4850 3500 2    50   ~ 0
+M2_HC
+Wire Wire Line
+	4350 2400 4900 2400
+$Comp
+L power:GND #PWR04
+U 1 1 5CB16001
+P 4900 2400
+F 0 "#PWR04" H 4900 2150 50  0001 C CNN
+F 1 "GND" V 4905 2272 50  0000 R CNN
+F 2 "" H 4900 2400 50  0001 C CNN
+F 3 "" H 4900 2400 50  0001 C CNN
+	1    4900 2400
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	4350 2200 4850 2200
+Wire Wire Line
+	4350 2600 4850 2600
+Wire Wire Line
+	4350 2800 4850 2800
+Wire Wire Line
+	4350 3000 4850 3000
+Wire Wire Line
+	4350 3200 4850 3200
+Wire Wire Line
+	4350 3400 4850 3400
+Wire Wire Line
+	4850 3500 4350 3500
+Wire Wire Line
+	4350 3300 4850 3300
+Wire Wire Line
+	4350 3100 4850 3100
+$Comp
+L power:GND #PWR03
+U 1 1 5CB16010
+P 4050 3900
+F 0 "#PWR03" H 4050 3650 50  0001 C CNN
+F 1 "GND" H 4055 3727 50  0000 C CNN
+F 2 "" H 4050 3900 50  0001 C CNN
+F 3 "" H 4050 3900 50  0001 C CNN
+	1    4050 3900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4050 3800 4050 3900
+$Comp
+L Connector:DB15_Female_MountingHoles J5
+U 1 1 5CB1F351
+P 5700 2900
+F 0 "J5" H 5700 3750 50  0000 C CNN
+F 1 "M3" V 5900 2900 50  0000 C CNN
+F 2 "Connector_Dsub:DSUB-15_Female_Horizontal_P2.77x2.84mm_EdgePinOffset7.70mm_Housed_MountingHolesOffset9.12mm" H 5700 2900 50  0001 C CNN
+F 3 " ~" H 5700 2900 50  0001 C CNN
+	1    5700 2900
+	-1   0    0    -1  
+$EndComp
+Text Label 6500 3000 2    50   ~ 0
+M3_BRK
+Text Label 6500 2200 2    50   ~ 0
+M3_PWM
+Text Label 6500 3400 2    50   ~ 0
+M3_ALM
+Text Label 6500 3200 2    50   ~ 0
+M3_SPD
+Text Label 6500 3100 2    50   ~ 0
+M3_HA
+Text Label 6500 3300 2    50   ~ 0
+M3_HB
+Text Label 6500 3500 2    50   ~ 0
+M3_HC
+Wire Wire Line
+	6000 2400 6550 2400
+$Comp
+L power:GND #PWR06
+U 1 1 5CB1F361
+P 6550 2400
+F 0 "#PWR06" H 6550 2150 50  0001 C CNN
+F 1 "GND" V 6555 2272 50  0000 R CNN
+F 2 "" H 6550 2400 50  0001 C CNN
+F 3 "" H 6550 2400 50  0001 C CNN
+	1    6550 2400
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	6000 2200 6500 2200
+Wire Wire Line
+	6000 2600 6500 2600
+Wire Wire Line
+	6000 2800 6500 2800
+Wire Wire Line
+	6000 3000 6500 3000
+Wire Wire Line
+	6000 3200 6500 3200
+Wire Wire Line
+	6000 3400 6500 3400
+Wire Wire Line
+	6500 3500 6000 3500
+Wire Wire Line
+	6000 3300 6500 3300
+Wire Wire Line
+	6000 3100 6500 3100
+$Comp
+L power:GND #PWR05
+U 1 1 5CB1F370
+P 5700 3900
+F 0 "#PWR05" H 5700 3650 50  0001 C CNN
+F 1 "GND" H 5705 3727 50  0000 C CNN
+F 2 "" H 5700 3900 50  0001 C CNN
+F 3 "" H 5700 3900 50  0001 C CNN
+	1    5700 3900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5700 3800 5700 3900
+$Comp
+L Connector:DB15_Female_MountingHoles J6
+U 1 1 5CB2E72C
+P 7150 2900
+F 0 "J6" H 7150 3750 50  0000 C CNN
+F 1 "M4" V 7350 2900 50  0000 C CNN
+F 2 "Connector_Dsub:DSUB-15_Female_Horizontal_P2.77x2.84mm_EdgePinOffset7.70mm_Housed_MountingHolesOffset9.12mm" H 7150 2900 50  0001 C CNN
+F 3 " ~" H 7150 2900 50  0001 C CNN
+	1    7150 2900
+	-1   0    0    -1  
+$EndComp
+Text Label 7950 2800 2    50   ~ 0
+M4_EN
+Text Label 7950 2600 2    50   ~ 0
+M4_DIR
+Text Label 7950 2200 2    50   ~ 0
+M4_PWM
+Text Label 7950 3400 2    50   ~ 0
+M4_ALM
+Text Label 7950 3200 2    50   ~ 0
+M4_SPD
+Text Label 7950 3100 2    50   ~ 0
+M4_HA
+Text Label 7950 3300 2    50   ~ 0
+M4_HB
+Text Label 7950 3500 2    50   ~ 0
+M4_HC
+Wire Wire Line
+	7450 2400 8000 2400
+$Comp
+L power:GND #PWR08
+U 1 1 5CB2E73C
+P 8000 2400
+F 0 "#PWR08" H 8000 2150 50  0001 C CNN
+F 1 "GND" V 8005 2272 50  0000 R CNN
+F 2 "" H 8000 2400 50  0001 C CNN
+F 3 "" H 8000 2400 50  0001 C CNN
+	1    8000 2400
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	7450 2200 7950 2200
+Wire Wire Line
+	7450 2600 7950 2600
+Wire Wire Line
+	7450 2800 7950 2800
+Wire Wire Line
+	7450 3000 7950 3000
+Wire Wire Line
+	7450 3200 7950 3200
+Wire Wire Line
+	7450 3400 7950 3400
+Wire Wire Line
+	7950 3500 7450 3500
+Wire Wire Line
+	7450 3300 7950 3300
+Wire Wire Line
+	7450 3100 7950 3100
+$Comp
+L power:GND #PWR07
+U 1 1 5CB2E74B
+P 7150 3900
+F 0 "#PWR07" H 7150 3650 50  0001 C CNN
+F 1 "GND" H 7155 3727 50  0000 C CNN
+F 2 "" H 7150 3900 50  0001 C CNN
+F 3 "" H 7150 3900 50  0001 C CNN
+	1    7150 3900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7150 3800 7150 3900
+Text Label 4850 3200 2    50   ~ 0
+M2_SPD
+Text Label 6500 2600 2    50   ~ 0
+M3_DIR
+Text Label 6500 2800 2    50   ~ 0
+M3_EN
+Text Label 7950 3000 2    50   ~ 0
+M4_BRK
+NoConn ~ 2750 2300
+NoConn ~ 2750 2500
+NoConn ~ 2750 2700
+NoConn ~ 2750 2900
+NoConn ~ 2750 3600
+NoConn ~ 4350 3600
+NoConn ~ 4350 2900
+NoConn ~ 4350 2700
+NoConn ~ 4350 2500
+NoConn ~ 4350 2300
+NoConn ~ 6000 2300
+NoConn ~ 6000 2500
+NoConn ~ 6000 2700
+NoConn ~ 6000 2900
+NoConn ~ 6000 3600
+NoConn ~ 7450 3600
+NoConn ~ 7450 2900
+NoConn ~ 7450 2700
+NoConn ~ 7450 2500
+NoConn ~ 7450 2300
 $EndSCHEMATC
