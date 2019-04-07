@@ -2,7 +2,7 @@
 
   (general
     (thickness 1.6)
-    (drawings 8)
+    (drawings 9)
     (tracks 98)
     (zones 0)
     (modules 20)
@@ -34,7 +34,7 @@
   )
 
   (setup
-    (last_trace_width 4)
+    (last_trace_width 1.27)
     (user_trace_width 1.27)
     (user_trace_width 2)
     (user_trace_width 4)
@@ -691,6 +691,9 @@
       (net 4 /GND))
   )
 
+  (gr_text "Power Distribution Board\nFRANCOR e.V." (at 140.97 92.71 90) (layer F.SilkS)
+    (effects (font (size 1.5 1.5) (thickness 0.3)))
+  )
   (target plus (at 116.078 137.16) (size 5) (width 0.05) (layer Edge.Cuts))
   (dimension 92.71 (width 0.15) (layer Dwgs.User)
     (gr_text "92,710 mm" (at 90.14 90.805 90) (layer Dwgs.User)
