@@ -116,10 +116,10 @@ int main(void)
   /* Init firmware */
   Firmware_Init();
 
-//  HAL_GPIO_WritePin(M1_EN_GPIO_Port, M1_EN_Pin, GPIO_PIN_RESET);
-//  HAL_GPIO_WritePin(M1_BRK_GPIO_Port, M1_BRK_Pin, GPIO_PIN_RESET);
-//  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-//  htim1.Instance->CCR1 = 1500;
+  //HAL_GPIO_WritePin(M1_EN_GPIO_Port, M1_EN_Pin, GPIO_PIN_RESET);
+  //HAL_GPIO_WritePin(M1_BRK_GPIO_Port, M1_BRK_Pin, GPIO_PIN_SET);
+  //HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  //htim1.Instance->CCR1 = 0;
 //
 //  HAL_TIM_Base_Start_IT(&htim2);
 //  __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC2);

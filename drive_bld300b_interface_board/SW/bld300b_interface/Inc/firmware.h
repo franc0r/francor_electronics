@@ -18,7 +18,7 @@
 /* Includes ----------------------------------------------------------------------*/
 #include <array>
 
-#include "motorcontroller.h"
+#include <Motorcontroller.h>
 /* -------------------------------------------------------------------------------*/
 
 /** @addtogroup francor

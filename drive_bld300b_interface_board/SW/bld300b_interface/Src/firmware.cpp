@@ -46,10 +46,25 @@ using namespace francor;
 Firmware::Firmware(TIM_HandleTypeDef& power_stage_tim) :
     _power_stage_tim(power_stage_tim),
     _power_stage_pwm_fac(0.0f),
-    _motor_list({Motorcontroller(htim1, TIM_CHN_1, htim2),
-                 Motorcontroller(htim1, TIM_CHN_2, htim3),
-                 Motorcontroller(htim1, TIM_CHN_3, htim4),
-                 Motorcontroller(htim1, TIM_CHN_4, htim8)})
+    _motor_list({Motorcontroller(htim1, TIM_CHN_1, htim2,
+                                 GPIOPin(M1_EN_GPIO_Port, M1_EN_Pin),
+                                 GPIOPin(M1_BRK_GPIO_Port, M1_BRK_Pin),
+                                 GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin)),
+
+                  Motorcontroller(htim1, TIM_CHN_2, htim3,
+                                 GPIOPin(M1_EN_GPIO_Port, M1_EN_Pin),
+                                 GPIOPin(M1_BRK_GPIO_Port, M1_BRK_Pin),
+                                 GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin)),
+
+                   Motorcontroller(htim1, TIM_CHN_3, htim4,
+                                  GPIOPin(M1_EN_GPIO_Port, M1_EN_Pin),
+                                  GPIOPin(M1_BRK_GPIO_Port, M1_BRK_Pin),
+                                  GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin)),
+
+                  Motorcontroller(htim1, TIM_CHN_4, htim8,
+                                 GPIOPin(M1_EN_GPIO_Port, M1_EN_Pin),
+                                 GPIOPin(M1_BRK_GPIO_Port, M1_BRK_Pin),
+                                 GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin))})
 {
 
 }
@@ -58,6 +73,16 @@ void Firmware::init()
 {
   /* initialize power stage */
   initPowerStage(POWER_STAGE_PWM_FREQ_KHz, CPU_CLOCK_MHZ);
+
+  /* initialize motor controllers */
+  for(auto& motor : _motor_list)
+  {
+    if(!motor.init(_power_stage_pwm_fac))
+    {
+      Error_Handler();
+    }
+  }
+
 }
 
 void Firmware::update()
