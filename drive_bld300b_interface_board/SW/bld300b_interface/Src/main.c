@@ -72,8 +72,6 @@ static void MX_TIM8_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint8_t   m1_hall_state = 0U;
-volatile uint32_t  m1_cnt = 0U;
 /* USER CODE END 0 */
 
 /**
@@ -123,7 +121,7 @@ int main(void)
 //
 //  HAL_TIM_Base_Start_IT(&htim2);
 //  __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC2);
-//  HAL_TIMEx_HallSensor_Start_IT(&htim2);
+  HAL_TIMEx_HallSensor_Start_IT(&htim2);
 
 
   /* USER CODE END 2 */
@@ -135,6 +133,7 @@ int main(void)
     /* Update firmware */
     Firmware_Update();
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -339,7 +338,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 4500;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 65535;
+  htim2.Init.Period = 500;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
@@ -604,18 +603,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-{
-	if(htim->Instance == htim2.Instance)
-	{
-		m1_hall_state = 0U;
-		m1_hall_state = (HAL_GPIO_ReadPin(M1_HA_GPIO_Port, M1_HA_Pin) << 3) |
-				        (HAL_GPIO_ReadPin(M1_HB_GPIO_Port, M1_HB_Pin) << 2) |
-						(HAL_GPIO_ReadPin(M1_HC_GPIO_Port, M1_HC_Pin));
-
-		m1_cnt++;
-	}
-}
 
 /* USER CODE END 4 */
 
@@ -627,7 +614,11 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
+  while(1)
+  {
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+    HAL_Delay(50u);
+  }
   /* USER CODE END Error_Handler_Debug */
 }
 

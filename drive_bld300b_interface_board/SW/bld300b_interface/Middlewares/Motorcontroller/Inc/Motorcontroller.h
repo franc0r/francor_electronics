@@ -65,6 +65,13 @@ class Motorcontroller
   const bool init(const float duty_cycle_factor);
 
   /**
+   * @brief Update Motorcontroller
+   *
+   * @return true: success false: error
+   */
+  const bool update(void);
+
+  /**
    * @brief Enable drive
    *
    * @return true: success false: error
@@ -89,7 +96,18 @@ class Motorcontroller
   void disableBrake(void);
 
 
- //private:
+  /**
+   * @brief This function is called due to a hall interrupt
+   *
+   * @param timer_handle Timer handle which triggered the interrupt
+   */
+  void HallInterrupt(const TIM_HandleTypeDef& timer_handle);
+
+  /* Getters */
+  const float getCurrentSpeedRPM(void)  {return _current_speed_rpm;}
+
+
+private:
 
   /**
    * @brief Set duty cycle of powerstage
@@ -109,6 +127,11 @@ class Motorcontroller
   const GPIOPin   _direction_pin;     //!< Pin to set direction
 
   float     _duty_cycle_factor; //!< Duty cycle factor to calculate raw value
+
+  volatile uint16_t _hall_timer_count; //!< Ticks of timer since last hall event
+  volatile bool     _hall_event;       //!< Hall event occured
+
+  float _current_speed_rpm; //!< Current speed value in [rpm]
 
   bool  _enabled; //!< Saves true if drive is enabled
 

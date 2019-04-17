@@ -15,6 +15,8 @@
 /* -------------------------------------------------------------------------------*/
 
 /* Private Variables -------------------------------------------------------------*/
+extern UART_HandleTypeDef huart2;
+
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
@@ -22,6 +24,15 @@ extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim8;
 
 francor::Firmware  g_firmware_handle = francor::Firmware(htim1);
+/* -------------------------------------------------------------------------------*/
+
+/* Interrupt Functions -----------------------------------------------------------*/
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+  g_firmware_handle.HAL_TIM_IC_CaptureCallback((*htim));
+}
+
 /* -------------------------------------------------------------------------------*/
 
 /* Public Functions --------------------------------------------------------------*/
@@ -52,19 +63,19 @@ Firmware::Firmware(TIM_HandleTypeDef& power_stage_tim) :
                                  GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin)),
 
                   Motorcontroller(htim1, TIM_CHN_2, htim3,
-                                 GPIOPin(M1_EN_GPIO_Port, M1_EN_Pin),
-                                 GPIOPin(M1_BRK_GPIO_Port, M1_BRK_Pin),
-                                 GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin)),
+                                 GPIOPin(M2_EN_GPIO_Port, M2_EN_Pin),
+                                 GPIOPin(M2_BRK_GPIO_Port, M2_BRK_Pin),
+                                 GPIOPin(M2_DIR_GPIO_Port, M2_DIR_Pin)),
 
                    Motorcontroller(htim1, TIM_CHN_3, htim4,
-                                  GPIOPin(M1_EN_GPIO_Port, M1_EN_Pin),
-                                  GPIOPin(M1_BRK_GPIO_Port, M1_BRK_Pin),
-                                  GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin)),
+                                  GPIOPin(M3_EN_GPIO_Port, M3_EN_Pin),
+                                  GPIOPin(M3_BRK_GPIO_Port, M3_BRK_Pin),
+                                  GPIOPin(M3_DIR_GPIO_Port, M3_DIR_Pin)),
 
                   Motorcontroller(htim1, TIM_CHN_4, htim8,
-                                 GPIOPin(M1_EN_GPIO_Port, M1_EN_Pin),
-                                 GPIOPin(M1_BRK_GPIO_Port, M1_BRK_Pin),
-                                 GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin))})
+                                 GPIOPin(M4_EN_GPIO_Port, M4_EN_Pin),
+                                 GPIOPin(M4_BRK_GPIO_Port, M4_BRK_Pin),
+                                 GPIOPin(M4_DIR_GPIO_Port, M4_DIR_Pin))})
 {
 
 }
@@ -72,7 +83,10 @@ Firmware::Firmware(TIM_HandleTypeDef& power_stage_tim) :
 void Firmware::init()
 {
   /* initialize power stage */
-  initPowerStage(POWER_STAGE_PWM_FREQ_KHz, CPU_CLOCK_MHZ);
+  if(!initPowerStage(POWER_STAGE_PWM_FREQ_KHz, CPU_CLOCK_MHZ))
+  {
+    Error_Handler();
+  }
 
   /* initialize motor controllers */
   for(auto& motor : _motor_list)
@@ -83,12 +97,47 @@ void Firmware::init()
     }
   }
 
+   //_motor_list[0].enable();
+  // _motor_list[0].disableBrake();
+   //_motor_list[0].setDutyCycle(6.0f);
+
 }
 
 void Firmware::update()
 {
+  static float old_speed = 0.0f;
 
+  const float speed = _motor_list[0].getCurrentSpeedRPM();
+  if(speed != old_speed)
+  {
+    const uint32_t rpm_fp1 = (uint32_t)(speed);
+    const uint32_t rpm_fp2 = (uint32_t)(speed * 1000.0f) % 1000u;
+
+    char buffer[32];
+    sprintf(buffer, "Speed: %li.%li\r\n", rpm_fp1, rpm_fp2);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 100u);
+    old_speed = speed;
+  }
+
+  /* Update motors */
+  for(auto& motor : _motor_list)
+  {
+    if(!motor.update())
+    {
+      Error_Handler();
+    }
+  }
 }
+
+void Firmware::HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef& htim)
+{
+  /* Call motor interrupts */
+  for(auto& motor : _motor_list)
+  {
+    motor.HallInterrupt(htim);
+  }
+}
+
 /* -------------------------------------------------------------------------------*/
 
 /* Class Private Functions -------------------------------------------------------*/
@@ -96,6 +145,20 @@ void Firmware::update()
 bool Firmware::initPowerStage(const uint8_t pwm_frequency_kHz,
                               const uint8_t cpu_clock_MHz)
 {
+  /* Calculate bus clock */
+  uint8_t bus_clock_MHz = cpu_clock_MHz;
+  switch(_power_stage_tim.Init.ClockDivision)
+  {
+    case TIM_CLOCKDIVISION_DIV2:
+    {
+      bus_clock_MHz = cpu_clock_MHz / 2u;
+    }break;
+    case TIM_CLOCKDIVISION_DIV4:
+    {
+      bus_clock_MHz = cpu_clock_MHz / 4u;
+    }break;
+  }
+
   /* Calculate prescaler and period of PWM timer */
   uint32_t period = 0u;
   uint32_t prescaler = 0u;
@@ -108,7 +171,7 @@ bool Firmware::initPowerStage(const uint8_t pwm_frequency_kHz,
     }
 
     /* Calculate timer period */
-    period = (static_cast<std::uint32_t>(cpu_clock_MHz) * 1e3) /
+    period = (static_cast<std::uint32_t>(bus_clock_MHz) * 1e3) /
              (static_cast<std::uint32_t>(pwm_frequency_kHz) * (prescaler + 1));
 
     /* Check if prescaler has to be incremented */

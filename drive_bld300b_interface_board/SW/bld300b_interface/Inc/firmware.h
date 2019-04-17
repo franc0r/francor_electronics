@@ -17,8 +17,11 @@
 
 /* Includes ----------------------------------------------------------------------*/
 #include <array>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <Motorcontroller.h>
+#include "Motorcontroller.h"
 /* -------------------------------------------------------------------------------*/
 
 /** @addtogroup francor
@@ -64,18 +67,26 @@ public:
    */
   void update(void);
 
+  /**
+   * @brief Callback function for CCR interrupt
+   *
+   * @param htim Handle of timer which triggered the interrupt
+   *
+   */
+  void HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef& htim);
+
 private:
 
   /**
    * @brief Initializes the powerstage PWM generation
    *
    * @param pwm_frequency_kHz PWM frequency in kHz
-   * @param cpu_clock_MHz CPU clok in MHz
+   * @param cpu_clock_MHz CPU clock in MHz
    *
    * @return true: success false: error
    */
   bool initPowerStage(const uint8_t pwm_frequency_kHz,
-                      const uint8_t cpu_clock_MHz);
+                      const uint8_t bus_clock_MHz);
 
   TIM_HandleTypeDef&  _power_stage_tim;     //!< Handle of powerstage timer
   float               _power_stage_pwm_fac; //!< Factor to calculate raw pwm value from percentage

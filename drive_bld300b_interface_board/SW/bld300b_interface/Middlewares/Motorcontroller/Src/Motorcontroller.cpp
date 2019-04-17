@@ -32,6 +32,10 @@ Motorcontroller::Motorcontroller(TIM_HandleTypeDef& tim_pwm,
                                      _enable_pin(enable_pin),
                                      _brake_pin(brake_pin),
                                      _direction_pin(direction_pin),
+                                     _duty_cycle_factor(0.0f),
+                                     _hall_timer_count(0u),
+                                     _hall_event(false),
+                                     _current_speed_rpm(0.0f),
                                      _enabled(false),
                                      _is_initialized(false)
 {
@@ -56,11 +60,68 @@ const bool Motorcontroller::init(const float duty_cycle_factor)
   /* Set direction to FWD */
   HAL_GPIO_WritePin(_direction_pin.port, _direction_pin.pin, GPIO_PIN_RESET);
 
+  /* Start hall encoder */
+  if(HAL_OK != HAL_TIMEx_HallSensor_Start_IT(&_tim_hall_handle))
+  {
+    return false;
+  }
+
   /* Reset values */
   _enabled = false;
+  _hall_event = false;
 
   /* Class is initialized */
   _is_initialized = true;
+
+  return true;
+}
+
+const bool Motorcontroller::update(void)
+{
+  /* Check if class is initialized */
+  if(!_is_initialized) return false;
+
+  static const float weight = 0.2f;
+  static uint32_t hall_event_timestamp = 0u;
+
+  /* Check if new hall value is available */
+  if(_hall_event)
+  {
+    _hall_event = false;
+    const uint16_t hall_timer_cnt = _hall_timer_count;
+
+    /* Calculate rpm value */
+    const float delta_time = static_cast<float>(hall_timer_cnt) * 0.0001f;
+    const float speed_rpm = 60.0f / (delta_time * 3.0f * 15.0f);
+
+    /* Update rpm with smooth factor */
+    _current_speed_rpm = (1.0f-weight) * _current_speed_rpm + (weight) * speed_rpm;
+
+    /* Limit speed */
+    if(fabs(_current_speed_rpm) < 2.0f)
+    {
+      _current_speed_rpm = 0.0f;
+    }
+
+    /* Store last timestamp */
+    hall_event_timestamp = HAL_GetTick();
+  }
+
+  const uint32_t delta_time = HAL_GetTick() - hall_event_timestamp;
+  if(delta_time > 10u)
+  {
+    /* Update rpm with smooth factor */
+    _current_speed_rpm = (1.0f-weight) * _current_speed_rpm;
+
+    /* Limit speed */
+    if(fabs(_current_speed_rpm) < 2.0f)
+    {
+      _current_speed_rpm = 0.0f;
+    }
+
+    /* Store last timestamp */
+    hall_event_timestamp = HAL_GetTick();
+  }
 
   return true;
 }
@@ -77,7 +138,7 @@ const bool Motorcontroller::enable()
   setDutyCycle(0.0f);
 
   /* Set direction to FWD */
-  //HAL_GPIO_WritePin(_direction_pin.port, _direction_pin.pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(_direction_pin.port, _direction_pin.pin, GPIO_PIN_RESET);
 
   /* Set brake active */
   HAL_GPIO_WritePin(_brake_pin.port, _brake_pin.pin, GPIO_PIN_SET);
@@ -154,6 +215,17 @@ void Motorcontroller::enableBrake()
 void Motorcontroller::disableBrake()
 {
   HAL_GPIO_WritePin(_brake_pin.port, _brake_pin.pin, GPIO_PIN_RESET);
+}
+
+void Motorcontroller::HallInterrupt(const TIM_HandleTypeDef& timer_handle)
+{
+  /* Check if interrupt was triggered by timer of this controller */
+  if(timer_handle.Instance == _tim_hall_handle.Instance)
+  {
+    /* New hall event store value */
+    _hall_event = true;
+    _hall_timer_count = timer_handle.Instance->CCR1;
+  }
 }
 
 /* -------------------------------------------------------------------------------*/
