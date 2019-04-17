@@ -101,7 +101,7 @@ class Motorcontroller
    *
    * @param timer_handle Timer handle which triggered the interrupt
    */
-  void HallInterrupt(const TIM_HandleTypeDef& timer_handle);
+  void HallInterrupt(const TIM_HandleTypeDef* htim);
 
   /* Getters */
   const float getCurrentSpeedRPM(void)  {return _current_speed_rpm;}

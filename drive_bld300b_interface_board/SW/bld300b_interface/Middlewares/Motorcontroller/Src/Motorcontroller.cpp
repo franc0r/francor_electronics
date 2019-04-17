@@ -90,17 +90,20 @@ const bool Motorcontroller::update(void)
     _hall_event = false;
     const uint16_t hall_timer_cnt = _hall_timer_count;
 
-    /* Calculate rpm value */
-    const float delta_time = static_cast<float>(hall_timer_cnt) * 0.0001f;
-    const float speed_rpm = 60.0f / (delta_time * 3.0f * 15.0f);
-
-    /* Update rpm with smooth factor */
-    _current_speed_rpm = (1.0f-weight) * _current_speed_rpm + (weight) * speed_rpm;
-
-    /* Limit speed */
-    if(fabs(_current_speed_rpm) < 2.0f)
+    if(hall_timer_cnt > 10u)
     {
-      _current_speed_rpm = 0.0f;
+      /* Calculate rpm value */
+      const float delta_time = static_cast<float>(hall_timer_cnt) * 0.0001f;
+      const float speed_rpm = 60.0f / (delta_time * 3.0f * 15.0f);
+
+      /* Update rpm with smooth factor */
+      _current_speed_rpm = (1.0f-weight) * _current_speed_rpm + (weight) * speed_rpm;
+
+      /* Limit speed */
+      if(fabs(_current_speed_rpm) < 1.0f)
+      {
+        _current_speed_rpm = 0.0f;
+      }
     }
 
     /* Store last timestamp */
@@ -108,13 +111,13 @@ const bool Motorcontroller::update(void)
   }
 
   const uint32_t delta_time = HAL_GetTick() - hall_event_timestamp;
-  if(delta_time > 10u)
+  if(delta_time > 50u)
   {
     /* Update rpm with smooth factor */
-    _current_speed_rpm = (1.0f-weight) * _current_speed_rpm;
+    _current_speed_rpm = (0.75f) * _current_speed_rpm;
 
     /* Limit speed */
-    if(fabs(_current_speed_rpm) < 2.0f)
+    if(fabs(_current_speed_rpm) < 1.0f)
     {
       _current_speed_rpm = 0.0f;
     }
@@ -217,14 +220,14 @@ void Motorcontroller::disableBrake()
   HAL_GPIO_WritePin(_brake_pin.port, _brake_pin.pin, GPIO_PIN_RESET);
 }
 
-void Motorcontroller::HallInterrupt(const TIM_HandleTypeDef& timer_handle)
+void Motorcontroller::HallInterrupt(const TIM_HandleTypeDef* htim)
 {
   /* Check if interrupt was triggered by timer of this controller */
-  if(timer_handle.Instance == _tim_hall_handle.Instance)
+  if(htim->Instance == _tim_hall_handle.Instance)
   {
     /* New hall event store value */
     _hall_event = true;
-    _hall_timer_count = timer_handle.Instance->CCR1;
+    _hall_timer_count = htim->Instance->CCR1;
   }
 }
 

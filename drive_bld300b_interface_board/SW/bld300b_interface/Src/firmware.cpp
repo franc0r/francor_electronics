@@ -30,7 +30,7 @@ francor::Firmware  g_firmware_handle = francor::Firmware(htim1);
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-  g_firmware_handle.HAL_TIM_IC_CaptureCallback((*htim));
+  g_firmware_handle.HAL_TIM_IC_CaptureCallback(htim);
 }
 
 /* -------------------------------------------------------------------------------*/
@@ -129,7 +129,7 @@ void Firmware::update()
   }
 }
 
-void Firmware::HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef& htim)
+void Firmware::HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef* htim)
 {
   /* Call motor interrupts */
   for(auto& motor : _motor_list)

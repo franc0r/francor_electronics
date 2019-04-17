@@ -73,7 +73,7 @@ public:
    * @param htim Handle of timer which triggered the interrupt
    *
    */
-  void HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef& htim);
+  void HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef* htim);
 
 private:
 

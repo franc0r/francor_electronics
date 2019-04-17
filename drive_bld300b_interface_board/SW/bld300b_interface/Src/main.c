@@ -114,16 +114,6 @@ int main(void)
   /* Init firmware */
   Firmware_Init();
 
-  //HAL_GPIO_WritePin(M1_EN_GPIO_Port, M1_EN_Pin, GPIO_PIN_RESET);
-  //HAL_GPIO_WritePin(M1_BRK_GPIO_Port, M1_BRK_Pin, GPIO_PIN_SET);
-  //HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-  //htim1.Instance->CCR1 = 0;
-//
-//  HAL_TIM_Base_Start_IT(&htim2);
-//  __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC2);
-  HAL_TIMEx_HallSensor_Start_IT(&htim2);
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -605,27 +595,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM14 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  /* USER CODE BEGIN Callback 0 */
-
-  /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM14) {
-    HAL_IncTick();
-  }
-  /* USER CODE BEGIN Callback 1 */
-
-  /* USER CODE END Callback 1 */
-}
 
 /**
   * @brief  This function is executed in case of error occurrence.
