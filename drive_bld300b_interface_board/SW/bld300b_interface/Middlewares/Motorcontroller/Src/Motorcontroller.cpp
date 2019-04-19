@@ -81,8 +81,14 @@ const bool Motorcontroller::update(void)
   /* Check if class is initialized */
   if(!_is_initialized) return false;
 
-  static const float weight = 0.2f;
+  static const float normal_weight = 0.5f;
+  static const float peak_weight = 0.25f;
+  static const float peak_deviation = 30.0f;
+  static const float no_signal_weight = 0.5f;
+  static const float min_speed_cut_off = 2.0f;
+
   static uint32_t hall_event_timestamp = 0u;
+  static uint32_t hall_no_signal_cnt = 0u;
 
   /* Check if new hall value is available */
   if(_hall_event)
@@ -97,10 +103,28 @@ const bool Motorcontroller::update(void)
       const float speed_rpm = 60.0f / (delta_time * 3.0f * 15.0f);
 
       /* Update rpm with smooth factor */
-      _current_speed_rpm = (1.0f-weight) * _current_speed_rpm + (weight) * speed_rpm;
+      const float new_speed = calculateWeightedValued(_current_speed_rpm, speed_rpm, normal_weight);
 
-      /* Limit speed */
-      if(fabs(_current_speed_rpm) < 1.0f)
+      /* Check if deviation is to big */
+      const float delta = new_speed - _current_speed_rpm;
+
+      /*
+       * Check if the deviation between the current speed value and the
+       * new speed value is greater than the peak deviation. If the deviation
+       * is bigger trust value only with peak_weight ( smaller value ).
+       */
+      if(fabs(delta) <= peak_deviation)
+      {
+    	  /* Deviation of 30.0f is ok */
+    	  _current_speed_rpm = new_speed;
+      }
+      else
+      {
+        _current_speed_rpm = calculateWeightedValued(_current_speed_rpm, speed_rpm, peak_weight);
+      }
+
+      /* Limit low speed limit */
+      if(fabs(_current_speed_rpm) < min_speed_cut_off)
       {
         _current_speed_rpm = 0.0f;
       }
@@ -108,22 +132,30 @@ const bool Motorcontroller::update(void)
 
     /* Store last timestamp */
     hall_event_timestamp = HAL_GetTick();
+    hall_no_signal_cnt = 0u;
   }
-
-  const uint32_t delta_time = HAL_GetTick() - hall_event_timestamp;
-  if(delta_time > 50u)
+  else
   {
-    /* Update rpm with smooth factor */
-    _current_speed_rpm = (0.75f) * _current_speed_rpm;
+	  const uint32_t delta_time = HAL_GetTick() - hall_event_timestamp;
+	  if(hall_no_signal_cnt >= 4)
+	  {
+	    /* Set speed to 0 */
+	    _current_speed_rpm = 0;
+	  }
+	  else if(delta_time > 50u)
+	  {
+	    /* Update rpm with smooth factor */
+	    _current_speed_rpm = no_signal_weight * _current_speed_rpm;
 
-    /* Limit speed */
-    if(fabs(_current_speed_rpm) < 1.0f)
-    {
-      _current_speed_rpm = 0.0f;
-    }
+      /* Limit low speed limit */
+      if(fabs(_current_speed_rpm) < min_speed_cut_off)
+      {
+        _current_speed_rpm = 0.0f;
+      }
 
-    /* Store last timestamp */
-    hall_event_timestamp = HAL_GetTick();
+      /* Increase no signal count */
+      hall_no_signal_cnt++;
+	  }
   }
 
   return true;
@@ -249,7 +281,7 @@ const bool Motorcontroller::setDutyCycle(const float duty_cycle)
     raw_value = _tim_pwm_handle.Init.Period;
 
   /* Check direction */
-  if(duty_cycle >= 100.0f)
+  if(duty_cycle >= 0.0f)
   {
     HAL_GPIO_WritePin(_direction_pin.port, _direction_pin.pin, GPIO_PIN_SET);
   }
@@ -289,6 +321,13 @@ const bool Motorcontroller::setDutyCycle(const float duty_cycle)
 
 
   return true;
+}
+
+const float Motorcontroller::calculateWeightedValued(const float v1,
+                                                     const float v2,
+                                                     const float weight)
+{
+  return (1.0f - weight) * v1 + weight * v2;
 }
 
 /* -------------------------------------------------------------------------------*/

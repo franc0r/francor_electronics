@@ -107,7 +107,7 @@ class Motorcontroller
   const float getCurrentSpeedRPM(void)  {return _current_speed_rpm;}
 
 
-private:
+//private:
 
   /**
    * @brief Set duty cycle of powerstage
@@ -116,6 +116,20 @@ private:
    * @return
    */
   const bool setDutyCycle(const float duty_cycle);
+
+  /**
+   * @brief Calculates a weighted value
+   *
+   * @param v1 Value 1 (1-weight)
+   * @param v2 Value 2 (weight)
+   *
+   * @param weight Weighted value
+   *
+   * @return
+   */
+  const float calculateWeightedValued(const float v1,
+                                      const float v2,
+                                      const float weight);
 
   TIM_HandleTypeDef&  _tim_pwm_handle;  //!< Handle of timer used for PWM generation
   const TIM_Channel   _tim_pwm_chnl;    //!< Channel used for PWM generation

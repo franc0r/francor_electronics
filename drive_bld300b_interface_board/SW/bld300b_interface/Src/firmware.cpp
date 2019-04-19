@@ -97,15 +97,15 @@ void Firmware::init()
     }
   }
 
-   //_motor_list[0].enable();
-  // _motor_list[0].disableBrake();
-   //_motor_list[0].setDutyCycle(6.0f);
-
+   _motor_list[0].enable();
+   _motor_list[0].disableBrake();
+   _motor_list[0].setDutyCycle(-12.0f);
 }
 
 void Firmware::update()
 {
   static float old_speed = 0.0f;
+  static bool active = true;
 
   const float speed = _motor_list[0].getCurrentSpeedRPM();
   if(speed != old_speed)
@@ -117,6 +117,21 @@ void Firmware::update()
     sprintf(buffer, "Speed: %li.%li\r\n", rpm_fp1, rpm_fp2);
     HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 100u);
     old_speed = speed;
+  }
+
+  if(GPIO_PIN_RESET == HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin))
+  {
+	if(active)
+	{
+		_motor_list[0].setDutyCycle(0.0f);
+		active = false;
+	}
+	else
+	{
+		_motor_list[0].setDutyCycle(50.0f);
+		active = true;
+	}
+    HAL_Delay(100u);
   }
 
   /* Update motors */

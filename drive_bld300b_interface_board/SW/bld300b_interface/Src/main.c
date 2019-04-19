@@ -333,7 +333,7 @@ static void MX_TIM2_Init(void)
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
+  sConfig.IC1Filter = 3;
   sConfig.Commutation_Delay = 0;
   if (HAL_TIMEx_HallSensor_Init(&htim2, &sConfig) != HAL_OK)
   {
@@ -377,7 +377,7 @@ static void MX_TIM3_Init(void)
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
+  sConfig.IC1Filter = 3;
   sConfig.Commutation_Delay = 0;
   if (HAL_TIMEx_HallSensor_Init(&htim3, &sConfig) != HAL_OK)
   {
@@ -421,7 +421,7 @@ static void MX_TIM4_Init(void)
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
+  sConfig.IC1Filter = 3;
   sConfig.Commutation_Delay = 0;
   if (HAL_TIMEx_HallSensor_Init(&htim4, &sConfig) != HAL_OK)
   {
@@ -466,7 +466,7 @@ static void MX_TIM8_Init(void)
   htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
+  sConfig.IC1Filter = 3;
   sConfig.Commutation_Delay = 0;
   if (HAL_TIMEx_HallSensor_Init(&htim8, &sConfig) != HAL_OK)
   {
