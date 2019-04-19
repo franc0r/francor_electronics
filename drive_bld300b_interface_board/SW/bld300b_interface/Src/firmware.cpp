@@ -113,6 +113,18 @@ void Firmware::init()
 
 void Firmware::update()
 {
+  static uint32_t rx_timestamp = 0u;
+
+  const uint32_t delta_time = HAL_GetTick() - rx_timestamp;
+
+  if(delta_time > 200u)
+  {
+    for(auto& pwm : _pwm_list)
+    {
+      pwm = 0.0f;
+    }
+  }
+
   for(uint8_t idx = 0u; idx < NUM_DRIVES; idx++)
   {
     if(_pwm_list[idx] == 0.0f)
@@ -132,7 +144,7 @@ void Firmware::update()
   if(rx_buffer[0] != 0)
   {
     int i1 = 0, i2 = 0, i3 = 0, i4 = 0;
-    sscanf((char*)rx_buffer, "SPD %f %d %d %d\r\n", &i1, &i2, &i3, &i4);
+    sscanf((char*)rx_buffer, "SPD %d %d %d %d\r\n", &i1, &i2, &i3, &i4);
 
     _pwm_list[0] = static_cast<float>(i1) * 0.01f;
     _pwm_list[1] = static_cast<float>(i1) * 0.01f;
@@ -143,6 +155,8 @@ void Firmware::update()
     {
       rx_buffer[0] = 0u;
     }
+
+    rx_timestamp = HAL_GetTick();
   }
 
 }
