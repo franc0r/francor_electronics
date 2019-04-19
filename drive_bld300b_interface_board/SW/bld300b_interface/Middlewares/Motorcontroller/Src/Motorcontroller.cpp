@@ -26,6 +26,9 @@ Motorcontroller::Motorcontroller(TIM_HandleTypeDef& tim_pwm,
                                  const GPIOPin& enable_pin,
                                  const GPIOPin& brake_pin,
                                  const GPIOPin& direction_pin) :
+                                     _controller(),
+                                     _target_speed_rpm(0.0f),
+                                     _duty_cycle(0.0f),
                                      _tim_pwm_handle(tim_pwm),
                                      _tim_pwm_chnl(tim_pwm_chnl),
                                      _tim_hall_handle(tim_hall),
@@ -66,7 +69,11 @@ const bool Motorcontroller::init(const float duty_cycle_factor)
     return false;
   }
 
+  /* Init controller */
+  _controller.init(0.2f, 0.5f, 0.0f, -50.0f, 50.0f);
+
   /* Reset values */
+  _duty_cycle = 0.0f;
   _enabled = false;
   _hall_event = false;
 
@@ -76,12 +83,12 @@ const bool Motorcontroller::init(const float duty_cycle_factor)
   return true;
 }
 
-const bool Motorcontroller::update(void)
+const bool Motorcontroller::update(const float delta_time)
 {
   /* Check if class is initialized */
   if(!_is_initialized) return false;
 
-  static const float normal_weight = 0.5f;
+  static const float normal_weight = 0.25f;
   static const float peak_weight = 0.25f;
   static const float peak_deviation = 30.0f;
   static const float no_signal_weight = 0.5f;
@@ -142,7 +149,7 @@ const bool Motorcontroller::update(void)
 	    /* Set speed to 0 */
 	    _current_speed_rpm = 0;
 	  }
-	  else if(delta_time > 50u)
+	  else if(delta_time > 100u)
 	  {
 	    /* Update rpm with smooth factor */
 	    _current_speed_rpm = no_signal_weight * _current_speed_rpm;
@@ -158,6 +165,13 @@ const bool Motorcontroller::update(void)
 	  }
   }
 
+  if(_enabled && delta_time != 0.0f)
+  {
+    //_duty_cycle = _controller.update(_target_speed_rpm, _current_speed_rpm, delta_time);
+    //setDutyCycle(_duty_cycle);
+  }
+
+
   return true;
 }
 
@@ -170,7 +184,9 @@ const bool Motorcontroller::enable()
   if(_enabled) return true;
 
   /* Reset PWM values */
-  setDutyCycle(0.0f);
+  _target_speed_rpm = 0.0f;
+  _duty_cycle = 0.0f;
+  setDutyCycle(_duty_cycle);
 
   /* Set direction to FWD */
   HAL_GPIO_WritePin(_direction_pin.port, _direction_pin.pin, GPIO_PIN_RESET);
@@ -225,7 +241,9 @@ const bool Motorcontroller::disable()
   if(!_enabled) return true;
 
   /* Reset PWM values */
-  setDutyCycle(0.0f);
+  _target_speed_rpm = 0.0f;
+  _duty_cycle = 0.0f;
+  setDutyCycle(_duty_cycle);
 
   /* Reset enable pin */
   HAL_GPIO_WritePin(_enable_pin.port, _enable_pin.pin, GPIO_PIN_SET);

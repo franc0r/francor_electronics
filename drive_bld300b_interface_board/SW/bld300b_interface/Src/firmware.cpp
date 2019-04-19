@@ -99,7 +99,7 @@ void Firmware::init()
 
    _motor_list[0].enable();
    _motor_list[0].disableBrake();
-   _motor_list[0].setDutyCycle(-12.0f);
+   _motor_list[0]._target_speed_rpm = 10.0f;
 }
 
 void Firmware::update()
@@ -107,7 +107,7 @@ void Firmware::update()
   static float old_speed = 0.0f;
   static bool active = true;
 
-  const float speed = _motor_list[0].getCurrentSpeedRPM();
+  /*const float speed = _motor_list[0].getCurrentSpeedRPM();
   if(speed != old_speed)
   {
     const uint32_t rpm_fp1 = (uint32_t)(speed);
@@ -132,15 +132,36 @@ void Firmware::update()
 		active = true;
 	}
     HAL_Delay(100u);
-  }
+  }*/
 
   /* Update motors */
+  static uint32_t time_stamp = 0U;
+  static float timer_mc_update = 0.0f;
+  static float timer_print = 0.0f;
+
+  const float delta_time = static_cast<float>(HAL_GetTick() - time_stamp) * 0.001f;
+  time_stamp = HAL_GetTick();
+  timer_print += delta_time;
+
+  /* Check if delta time >= 1 */
   for(auto& motor : _motor_list)
   {
-    if(!motor.update())
+    if(!motor.update(delta_time))
     {
       Error_Handler();
     }
+  }
+
+
+  /* Print message */
+  if(timer_print > 0.03f)
+  {
+    char buffer[32];
+    sprintf(buffer, "Speed: %i.%i Duty: %i\r\n", (int)(_motor_list[0]._current_speed_rpm),
+                                                 (int)(_motor_list[0]._current_speed_rpm * 1000.0f) % 1000,
+                                            (int)(_motor_list[0]._duty_cycle));
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 100u);
+    timer_print = 0.0f;
   }
 }
 

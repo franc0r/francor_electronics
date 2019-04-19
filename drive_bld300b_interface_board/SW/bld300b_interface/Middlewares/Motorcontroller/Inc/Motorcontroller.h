@@ -18,6 +18,7 @@
 
 /* Includes ----------------------------------------------------------------------*/
 #include "Utils.h"
+#include "PIDController.h"
 /* -------------------------------------------------------------------------------*/
 
 /** @addtogroup francor
@@ -67,9 +68,11 @@ class Motorcontroller
   /**
    * @brief Update Motorcontroller
    *
+   * @param delta_time Delta time since last call
+   *
    * @return true: success false: error
    */
-  const bool update(void);
+  const bool update(const float delta_time);
 
   /**
    * @brief Enable drive
@@ -130,6 +133,10 @@ class Motorcontroller
   const float calculateWeightedValued(const float v1,
                                       const float v2,
                                       const float weight);
+
+  PIDController _controller;        //!< PID controller
+  float         _target_speed_rpm;  //!< Target RPM value
+  float         _duty_cycle;        //!< Duty cycle
 
   TIM_HandleTypeDef&  _tim_pwm_handle;  //!< Handle of timer used for PWM generation
   const TIM_Channel   _tim_pwm_chnl;    //!< Channel used for PWM generation
