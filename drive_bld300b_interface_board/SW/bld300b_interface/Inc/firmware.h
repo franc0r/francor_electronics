@@ -75,6 +75,13 @@ public:
    */
   void HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef* htim);
 
+  /**
+   * @brief Callback function DMA receive complete
+   *
+   * @param huart
+   */
+  void UART_DMAReceiveCplt(const UART_HandleTypeDef* huart);
+
 private:
 
   /**
@@ -92,6 +99,7 @@ private:
   float               _power_stage_pwm_fac; //!< Factor to calculate raw pwm value from percentage
 
   std::array<Motorcontroller, NUM_DRIVES> _motor_list; //!< List containing all motors
+  std::array<float, NUM_DRIVES> _pwm_list; //!< List containing desired pwm
 
 };
 
