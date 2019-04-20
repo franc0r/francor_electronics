@@ -25,7 +25,10 @@ Motorcontroller::Motorcontroller(TIM_HandleTypeDef& tim_pwm,
                                  TIM_HandleTypeDef& tim_hall,
                                  const GPIOPin& enable_pin,
                                  const GPIOPin& brake_pin,
-                                 const GPIOPin& direction_pin) :
+                                 const GPIOPin& direction_pin,
+                                 const GPIOPin& hall_a,
+                                 const GPIOPin& hall_b,
+                                 const GPIOPin& hall_c) :
                                      _controller(),
                                      _target_speed_rpm(0.0f),
                                      _duty_cycle(0.0f),
@@ -35,6 +38,11 @@ Motorcontroller::Motorcontroller(TIM_HandleTypeDef& tim_pwm,
                                      _enable_pin(enable_pin),
                                      _brake_pin(brake_pin),
                                      _direction_pin(direction_pin),
+                                     _hall_a(hall_a),
+                                     _hall_b(hall_b),
+                                     _hall_c(hall_c),
+                                     _hall_sensor_state(0u),
+                                     _direction(0),
                                      _duty_cycle_factor(0.0f),
                                      _hall_timer_count(0u),
                                      _hall_event(false),
@@ -73,6 +81,7 @@ const bool Motorcontroller::init(const float duty_cycle_factor)
   _controller.init(0.2f, 0.5f, 0.0f, -50.0f, 50.0f);
 
   /* Reset values */
+  _direction = 0;
   _duty_cycle = 0.0f;
   _enabled = false;
   _hall_event = false;
@@ -124,6 +133,21 @@ const bool Motorcontroller::update(const float delta_time)
       {
     	  /* Deviation of 30.0f is ok */
     	  _current_speed_rpm = new_speed;
+
+    	  /* Calculate direction */
+    	  static uint8_t old_hall_state = 0u;
+    	  const uint8_t dir_table[] = {0, 3, 6, 2, 5, 1, 4};
+
+    	  if(dir_table[old_hall_state] == _hall_sensor_state)
+    	  {
+    	    _direction = 1;
+    	  }
+    	  else
+    	  {
+    	    _direction = -1;
+    	  }
+    	  old_hall_state = _hall_sensor_state;
+
       }
       else
       {
@@ -134,6 +158,7 @@ const bool Motorcontroller::update(const float delta_time)
       if(fabs(_current_speed_rpm) < min_speed_cut_off)
       {
         _current_speed_rpm = 0.0f;
+        _direction = 0;
       }
     }
 
@@ -148,6 +173,7 @@ const bool Motorcontroller::update(const float delta_time)
 	  {
 	    /* Set speed to 0 */
 	    _current_speed_rpm = 0;
+	    _direction = 0;
 	  }
 	  else if(delta_time > 100u)
 	  {
@@ -158,6 +184,7 @@ const bool Motorcontroller::update(const float delta_time)
       if(fabs(_current_speed_rpm) < min_speed_cut_off)
       {
         _current_speed_rpm = 0.0f;
+        _direction = 0;
       }
 
       /* Increase no signal count */
@@ -278,6 +305,10 @@ void Motorcontroller::HallInterrupt(const TIM_HandleTypeDef* htim)
     /* New hall event store value */
     _hall_event = true;
     _hall_timer_count = htim->Instance->CCR1;
+    _hall_sensor_state = 0u;
+    _hall_sensor_state = (uint8_t)(HAL_GPIO_ReadPin(_hall_c.port, _hall_c.pin))
+                          | (uint8_t)(HAL_GPIO_ReadPin(_hall_b.port, _hall_b.pin) << 1u)
+                          | (uint8_t)(HAL_GPIO_ReadPin(_hall_a.port, _hall_a.pin) << 2u);
   }
 }
 

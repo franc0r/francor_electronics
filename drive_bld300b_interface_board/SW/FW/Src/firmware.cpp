@@ -68,22 +68,34 @@ Firmware::Firmware(TIM_HandleTypeDef& power_stage_tim) :
     _motor_list({Motorcontroller(htim1, TIM_CHN_1, htim2,
                                  GPIOPin(M1_EN_GPIO_Port, M1_EN_Pin),
                                  GPIOPin(M1_BRK_GPIO_Port, M1_BRK_Pin),
-                                 GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin)),
+                                 GPIOPin(M1_DIR_GPIO_Port, M1_DIR_Pin),
+                                 GPIOPin(M1_HA_GPIO_Port, M1_HA_Pin),
+                                 GPIOPin(M1_HB_GPIO_Port, M1_HB_Pin),
+                                 GPIOPin(M1_HC_GPIO_Port, M1_HC_Pin)),
 
                   Motorcontroller(htim1, TIM_CHN_2, htim3,
                                  GPIOPin(M2_EN_GPIO_Port, M2_EN_Pin),
                                  GPIOPin(M2_BRK_GPIO_Port, M2_BRK_Pin),
-                                 GPIOPin(M2_DIR_GPIO_Port, M2_DIR_Pin)),
+                                 GPIOPin(M2_DIR_GPIO_Port, M2_DIR_Pin),
+                                 GPIOPin(M2_HA_GPIO_Port, M2_HA_Pin),
+                                 GPIOPin(M2_HB_GPIO_Port, M2_HB_Pin),
+                                 GPIOPin(M2_HC_GPIO_Port, M2_HC_Pin)),
 
                    Motorcontroller(htim1, TIM_CHN_3, htim4,
                                   GPIOPin(M3_EN_GPIO_Port, M3_EN_Pin),
                                   GPIOPin(M3_BRK_GPIO_Port, M3_BRK_Pin),
-                                  GPIOPin(M3_DIR_GPIO_Port, M3_DIR_Pin)),
+                                  GPIOPin(M3_DIR_GPIO_Port, M3_DIR_Pin),
+                                  GPIOPin(M3_HA_GPIO_Port, M3_HA_Pin),
+                                  GPIOPin(M3_HB_GPIO_Port, M3_HB_Pin),
+                                  GPIOPin(M3_HC_GPIO_Port, M3_HC_Pin)),
 
                   Motorcontroller(htim1, TIM_CHN_4, htim8,
                                  GPIOPin(M4_EN_GPIO_Port, M4_EN_Pin),
                                  GPIOPin(M4_BRK_GPIO_Port, M4_BRK_Pin),
-                                 GPIOPin(M4_DIR_GPIO_Port, M4_DIR_Pin))}),
+                                 GPIOPin(M4_DIR_GPIO_Port, M4_DIR_Pin),
+                                 GPIOPin(M4_HA_GPIO_Port, M4_HA_Pin),
+                                 GPIOPin(M4_HB_GPIO_Port, M4_HB_Pin),
+                                 GPIOPin(M4_HC_GPIO_Port, M4_HC_Pin))}),
                                  _pwm_list()
 {
 
@@ -106,9 +118,12 @@ void Firmware::init()
     }
 
     /* Enable motor with brake */
-    motor.enable();
+    //motor.enable();
   }
 
+  //_motor_list[0].enable();
+  //_motor_list[0].disableBrake();
+  //_motor_list[0].setDutyCycle(10.0f);
 }
 
 void Firmware::update()
@@ -117,7 +132,25 @@ void Firmware::update()
 
   const uint32_t delta_time = HAL_GetTick() - rx_timestamp;
 
-  if(delta_time > 200u)
+  for(Motorcontroller& motor : _motor_list)
+  {
+    motor.update(static_cast<float>(delta_time) * 0.001f);
+  }
+
+  static uint8_t state_old = 0U;
+  static int8_t dir_old = 0;
+  const uint8_t state_new = _motor_list[0]._hall_sensor_state;
+  const int8_t dir_new = _motor_list[0]._direction;
+  if(state_old != state_new || dir_old != dir_new)
+  {
+    char buffer[64];
+    sprintf(buffer, "Sensor value: %d %d %d | %d | Direction: %i\r\n", (state_new >> 2) & 0x01, (state_new >> 1) & 0x01, (state_new >> 0) & 0x01, state_new, dir_new);
+    HAL_UART_Transmit(&huart2, (uint8_t*)(buffer), strlen(buffer), 10u);
+    state_old = state_new;
+    dir_old = dir_new;
+  }
+
+  /*if(delta_time > 200u)
   {
     for(auto& pwm : _pwm_list)
     {
@@ -157,7 +190,7 @@ void Firmware::update()
     }
 
     rx_timestamp = HAL_GetTick();
-  }
+  }*/
 
 }
 

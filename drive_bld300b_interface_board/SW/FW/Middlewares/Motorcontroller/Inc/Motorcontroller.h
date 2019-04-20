@@ -45,13 +45,22 @@ class Motorcontroller
    * @param tim_pwm Handle of timer used to generate PWM signal
    * @param tim_pwm_chnl PWM channel of timer used for this drive
    * @param tim_hall Handle of timer used to read hall sensors
+   * @param enable_pin Enable GPIO pin
+   * @param brake_pin Brake GPIO pin
+   * @param direction_pin Direction GPIO pin
+   * @param hall_a Hall sensor A GPIO pin
+   * @param hall_b Hall sensor B GPIO pin
+   * @param hall_c Hall sensor C GPIO pin
    */
   Motorcontroller(TIM_HandleTypeDef& tim_pwm,
                   const TIM_Channel tim_pwm_chnl,
                   TIM_HandleTypeDef& tim_hall,
                   const GPIOPin& enable_pin,
                   const GPIOPin& brake_pin,
-                  const GPIOPin& direction_pin);
+                  const GPIOPin& direction_pin,
+                  const GPIOPin& hall_a,
+                  const GPIOPin& hall_b,
+                  const GPIOPin& hall_c);
 
 
   /**
@@ -146,6 +155,12 @@ class Motorcontroller
   const GPIOPin   _enable_pin;        //!< Pin to enable drive
   const GPIOPin   _brake_pin;         //!< Pin to activate/deactivate brake
   const GPIOPin   _direction_pin;     //!< Pin to set direction
+
+  const GPIOPin     _hall_a;            //!< Hall sensor A pin
+  const GPIOPin     _hall_b;            //!< Hall sensor B pin
+  const GPIOPin     _hall_c;            //!< Hall sensor C pin
+  volatile uint8_t  _hall_sensor_state; //!< State of the hall sensor pins
+  int8_t            _direction;         //!< Direction 1: FWD 0: Stop -1:BWD
 
   float     _duty_cycle_factor; //!< Duty cycle factor to calculate raw value
 
