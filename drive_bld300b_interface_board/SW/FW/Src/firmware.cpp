@@ -21,6 +21,7 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim8;
 
 francor::Firmware  g_firmware_handle = francor::Firmware(htim1);
@@ -96,13 +97,20 @@ Firmware::Firmware(TIM_HandleTypeDef& power_stage_tim) :
                                  GPIOPin(M4_HA_GPIO_Port, M4_HA_Pin),
                                  GPIOPin(M4_HB_GPIO_Port, M4_HB_Pin),
                                  GPIOPin(M4_HC_GPIO_Port, M4_HC_Pin))}),
-                                 _pwm_list()
+                                 _pwm_list(),
+                                 _delta_time(0.0f)
 {
 
 }
 
 void Firmware::init()
 {
+  /* Start base timer with usec resolution */
+  if(HAL_OK != HAL_TIM_Base_Start(&htim5))
+  {
+    Error_Handler();
+  }
+
   /* initialize power stage */
   if(!initPowerStage(POWER_STAGE_PWM_FREQ_KHz, CPU_CLOCK_MHZ))
   {
@@ -128,7 +136,29 @@ void Firmware::init()
 
 void Firmware::update()
 {
-  static uint32_t rx_timestamp = 0u;
+  /* Update timestamp */
+  updateDeltaTime();
+
+  static float timer_message = 0.0f;
+
+  timer_message += _delta_time;
+
+  if(timer_message > 1.0f)
+  {
+    char buffer[64];
+    const uint32_t time = static_cast<uint32_t>(_delta_time * 1000000.0f);
+    sprintf(buffer, "Delta Time: %d usec\r\n", time);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 10u);
+    timer_message = 0.0f;
+  }
+
+  /* Update motor list */
+  for(Motorcontroller& motor : _motor_list)
+  {
+    motor.update(_delta_time);
+  }
+
+  /*static uint32_t rx_timestamp = 0u;
 
   const uint32_t delta_time = HAL_GetTick() - rx_timestamp;
 
@@ -148,7 +178,7 @@ void Firmware::update()
     HAL_UART_Transmit(&huart2, (uint8_t*)(buffer), strlen(buffer), 10u);
     state_old = state_new;
     dir_old = dir_new;
-  }
+  }*/
 
   /*if(delta_time > 200u)
   {
@@ -273,6 +303,20 @@ bool Firmware::initPowerStage(const uint8_t pwm_frequency_kHz,
   _power_stage_pwm_fac = static_cast<float>(period) / 100.0f;
 
   return true;
+}
+
+void Firmware::updateDeltaTime(void)
+{
+  /* Temp timestamp */
+  static uint32_t timestamp = htim5.Instance->CNT;
+
+  /* Calculate delta time */
+  const uint32_t delta_time_raw = htim5.Instance->CNT - timestamp;
+  _delta_time = static_cast<float>(delta_time_raw) * 0.000001f;
+
+
+  /* Store last timestamp */
+  timestamp = htim5.Instance->CNT;
 }
 
 /*! @} End of francor */

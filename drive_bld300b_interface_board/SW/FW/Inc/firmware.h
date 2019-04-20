@@ -95,11 +95,18 @@ private:
   bool initPowerStage(const uint8_t pwm_frequency_kHz,
                       const uint8_t bus_clock_MHz);
 
+  /**
+   * @brief Calculates the passed time since last call
+   */
+  void updateDeltaTime(void);
+
   TIM_HandleTypeDef&  _power_stage_tim;     //!< Handle of powerstage timer
   float               _power_stage_pwm_fac; //!< Factor to calculate raw pwm value from percentage
 
   std::array<Motorcontroller, NUM_DRIVES> _motor_list; //!< List containing all motors
   std::array<float, NUM_DRIVES> _pwm_list; //!< List containing desired pwm
+
+  float               _delta_time;  //!< Delta time in update loop since last call
 
 };
 
