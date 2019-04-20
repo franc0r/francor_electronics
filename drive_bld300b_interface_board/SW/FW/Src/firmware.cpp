@@ -139,6 +139,15 @@ void Firmware::update()
   /* Update timestamp */
   updateDeltaTime();
 
+  static uint32_t max_usec = 0U;
+  const uint32_t delta_time_usec = static_cast<uint32_t>(_delta_time * 1000000.0f);
+
+  if(delta_time_usec > max_usec)
+  {
+    max_usec = delta_time_usec;
+  }
+
+
   static float timer_message = 0.0f;
 
   timer_message += _delta_time;
@@ -146,9 +155,8 @@ void Firmware::update()
   if(timer_message > 1.0f)
   {
     char buffer[64];
-    const uint32_t time = static_cast<uint32_t>(_delta_time * 1000000.0f);
-    sprintf(buffer, "Delta Time: %d usec\r\n", time);
-    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 10u);
+    sprintf(buffer, "Max Time: %d usec\r\n", max_usec);
+    HAL_UART_Transmit_IT(&huart2, (uint8_t*)buffer, strlen(buffer));
     timer_message = 0.0f;
   }
 
