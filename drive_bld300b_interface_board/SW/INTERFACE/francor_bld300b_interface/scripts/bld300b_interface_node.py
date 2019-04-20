@@ -39,7 +39,7 @@ def callback_M4(data):
 
 if __name__ == '__main__':
   # Init ROS
-  rospy.init_node('drive_300b_interface')
+  rospy.init_node('bld300b_interface', anonymous=False, log_level=rospy.INFO)
 
   # Init variables
   g_rx_timestamp_m1 = rospy.Time.now()
@@ -47,12 +47,18 @@ if __name__ == '__main__':
   g_rx_timestamp_m3 = rospy.Time.now()
   g_rx_timestamp_m4 = rospy.Time.now()
 
+  serial_device = rospy.get_param('~serial_device', '/dev/ttyACM0')
+  max_timeout = rospy.get_param('~timeout', 0.1)
+
+  rospy.loginfo("Serial-Device: " + serial_device)
+  rospy.loginfo("Timeout: " + str(max_timeout))
+
 
   # Open serial device
   try:
-    nucleo_serial = serial.Serial('/dev/ttyS8', 115200)
+    nucleo_serial = serial.Serial(serial_device, 115200)
   except Exception as e:
-    rospy.logerr("Failed to open serial device!");
+    rospy.logerr("Failed to open serial device : " + serial_device);
     sys.exit(-1)
 
   # Register subscribers
