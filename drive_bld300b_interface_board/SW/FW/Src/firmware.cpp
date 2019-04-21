@@ -42,6 +42,11 @@ void UART_DMAReceiveCplt(UART_HandleTypeDef* huart)
   g_firmware_handle.UART_DMAReceiveCplt(huart);
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  g_firmware_handle.HAL_GPIO_EXTI_Callback(GPIO_Pin);
+}
+
 /* -------------------------------------------------------------------------------*/
 
 /* Public Functions --------------------------------------------------------------*/
@@ -129,9 +134,9 @@ void Firmware::init()
     //motor.enable();
   }
 
-  //_motor_list[0].enable();
-  //_motor_list[0].disableBrake();
-  //_motor_list[0].setDutyCycle(10.0f);
+  _motor_list[0].enable();
+  _motor_list[0].disableBrake();
+  //_motor_list[0]._target_speed_rpm = 0.0f;
 }
 
 void Firmware::update()
@@ -139,24 +144,16 @@ void Firmware::update()
   /* Update timestamp */
   updateDeltaTime();
 
-  static uint32_t max_usec = 0U;
-  const uint32_t delta_time_usec = static_cast<uint32_t>(_delta_time * 1000000.0f);
-
-  if(delta_time_usec > max_usec)
-  {
-    max_usec = delta_time_usec;
-  }
-
-
   static float timer_message = 0.0f;
-
   timer_message += _delta_time;
-
-  if(timer_message > 1.0f)
+  if(timer_message > 0.1f)
   {
     char buffer[64];
-    sprintf(buffer, "Max Time: %d usec\r\n", max_usec);
-    HAL_UART_Transmit_IT(&huart2, (uint8_t*)buffer, strlen(buffer));
+    const int32_t speed_h = static_cast<int32_t>(_motor_list[0]._current_speed_rpm);
+    const int32_t speed_l = abs(static_cast<int32_t>(_motor_list[0]._current_speed_rpm * 1000) % 1000);
+
+    sprintf(buffer, "Speed: %.3i.%.3i | %i\r\n", speed_h, speed_l, _motor_list[0]._direction);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 10u);
     timer_message = 0.0f;
   }
 
@@ -244,7 +241,10 @@ void Firmware::HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef* htim)
 void Firmware::UART_DMAReceiveCplt(const UART_HandleTypeDef* huart)
 {
   /* Extract data */
+}
 
+void Firmware::HAL_GPIO_EXTI_Callback(const uint16_t GPIO_Pin)
+{
 
 }
 
@@ -257,7 +257,7 @@ bool Firmware::initPowerStage(const uint8_t pwm_frequency_kHz,
 {
   /* Calculate bus clock */
   uint8_t bus_clock_MHz = cpu_clock_MHz;
-  switch(_power_stage_tim.Init.ClockDivision)
+ /* switch(_power_stage_tim.Init.ClockDivision)
   {
     case TIM_CLOCKDIVISION_DIV2:
     {
@@ -267,7 +267,7 @@ bool Firmware::initPowerStage(const uint8_t pwm_frequency_kHz,
     {
       bus_clock_MHz = cpu_clock_MHz / 4u;
     }break;
-  }
+  }*/
 
   /* Calculate prescaler and period of PWM timer */
   uint32_t period = 0u;
@@ -304,8 +304,10 @@ bool Firmware::initPowerStage(const uint8_t pwm_frequency_kHz,
   /* Adjust timer parameters */
   _power_stage_tim.Init.Period = period;
   _power_stage_tim.Init.Prescaler = prescaler;
-  _power_stage_tim.Instance->ARR = period;
-  _power_stage_tim.Instance->PSC = prescaler;
+  if (HAL_TIM_PWM_Init(&_power_stage_tim) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   /* Calculate factor for duty cycle raw value calculation */
   _power_stage_pwm_fac = static_cast<float>(period) / 100.0f;

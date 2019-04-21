@@ -78,7 +78,7 @@ const bool Motorcontroller::init(const float duty_cycle_factor)
   }
 
   /* Init controller */
-  _controller.init(0.2f, 0.5f, 0.0f, -50.0f, 50.0f);
+  _controller.init(0.3f, 0.3f, 0.0f, -50.0f, 50.0f);
 
   /* Reset values */
   _direction = 0;
@@ -97,14 +97,13 @@ const bool Motorcontroller::update(const float delta_time)
   /* Check if class is initialized */
   if(!_is_initialized) return false;
 
-  static const float normal_weight = 0.25f;
-  static const float peak_weight = 0.25f;
-  static const float peak_deviation = 30.0f;
+  static const float normal_weight = 0.3f;
+  static const float peak_weight = 0.1f;
+  static const float peak_deviation = 20.0f;
   static const float no_signal_weight = 0.5f;
-  static const float min_speed_cut_off = 2.0f;
+  static const float min_speed_cut_off = 0.5f;
 
-  static uint32_t hall_event_timestamp = 0u;
-  static uint32_t hall_no_signal_cnt = 0u;
+  static float timer_no_hall_event = 0.0f;
 
   /* Check if new hall value is available */
   if(_hall_event)
@@ -115,14 +114,29 @@ const bool Motorcontroller::update(const float delta_time)
     if(hall_timer_cnt > 10u)
     {
       /* Calculate rpm value */
+      float current_speed_abs = fabs(_current_speed_rpm);
       const float delta_time = static_cast<float>(hall_timer_cnt) * 0.0001f;
       const float speed_rpm = 60.0f / (delta_time * 3.0f * 15.0f);
 
+      /* Calculate direction */
+      static float direction_filtered = 0.0f;
+      static uint8_t old_hall_state = 0u;
+      int8_t new_direction = 0u;
+      if(MOTOR_HALL_STATE_TABLE[old_hall_state] == _hall_sensor_state)
+      {
+        new_direction = 1;
+      }
+      else
+      {
+        new_direction = -1;
+      }
+      old_hall_state = _hall_sensor_state;
+
       /* Update rpm with smooth factor */
-      const float new_speed = calculateWeightedValued(_current_speed_rpm, speed_rpm, normal_weight);
+      const float new_speed = calculateWeightedValued(current_speed_abs, speed_rpm, normal_weight);
 
       /* Check if deviation is to big */
-      const float delta = new_speed - _current_speed_rpm;
+      const float delta = new_speed - current_speed_abs;
 
       /*
        * Check if the deviation between the current speed value and the
@@ -132,27 +146,30 @@ const bool Motorcontroller::update(const float delta_time)
       if(fabs(delta) <= peak_deviation)
       {
     	  /* Deviation of 30.0f is ok */
-    	  _current_speed_rpm = new_speed;
+        current_speed_abs = new_speed;
 
     	  /* Calculate direction */
-    	  static uint8_t old_hall_state = 0u;
-    	  const uint8_t dir_table[] = {0, 3, 6, 2, 5, 1, 4};
-
-    	  if(dir_table[old_hall_state] == _hall_sensor_state)
-    	  {
-    	    _direction = 1;
-    	  }
-    	  else
-    	  {
-    	    _direction = -1;
-    	  }
-    	  old_hall_state = _hall_sensor_state;
+    	  direction_filtered = calculateWeightedValued(direction_filtered, new_direction, normal_weight);
 
       }
       else
       {
-        _current_speed_rpm = calculateWeightedValued(_current_speed_rpm, speed_rpm, peak_weight);
+        current_speed_abs = calculateWeightedValued(current_speed_abs, speed_rpm, peak_weight);
+
+        /* Calculate direction */
+        direction_filtered = calculateWeightedValued(direction_filtered, new_direction, peak_weight);
       }
+
+      if(direction_filtered >= 0.2f)
+      {
+        _direction = 1;
+      }
+      else if(direction_filtered <= -0.2f)
+      {
+        _direction = -1;
+      }
+
+      _current_speed_rpm = static_cast<float>(_direction) * current_speed_abs;
 
       /* Limit low speed limit */
       if(fabs(_current_speed_rpm) < min_speed_cut_off)
@@ -163,39 +180,26 @@ const bool Motorcontroller::update(const float delta_time)
     }
 
     /* Store last timestamp */
-    hall_event_timestamp = HAL_GetTick();
-    hall_no_signal_cnt = 0u;
+    timer_no_hall_event = 0.0f;
   }
   else
   {
-	  const uint32_t delta_time = HAL_GetTick() - hall_event_timestamp;
-	  if(hall_no_signal_cnt >= 4)
-	  {
-	    /* Set speed to 0 */
-	    _current_speed_rpm = 0;
-	    _direction = 0;
-	  }
-	  else if(delta_time > 100u)
-	  {
-	    /* Update rpm with smooth factor */
-	    _current_speed_rpm = no_signal_weight * _current_speed_rpm;
+    /* Increase timer */
+    timer_no_hall_event += delta_time;
 
-      /* Limit low speed limit */
-      if(fabs(_current_speed_rpm) < min_speed_cut_off)
-      {
-        _current_speed_rpm = 0.0f;
-        _direction = 0;
-      }
-
-      /* Increase no signal count */
-      hall_no_signal_cnt++;
-	  }
+    if(timer_no_hall_event > 1.0f)
+    {
+      _current_speed_rpm = 0.0f;
+      _direction = 0;
+    }
   }
+
 
   if(_enabled && delta_time != 0.0f)
   {
-    //_duty_cycle = _controller.update(_target_speed_rpm, _current_speed_rpm, delta_time);
-    //setDutyCycle(_duty_cycle);
+   // const float new_duty_cylce = _controller.update(_target_speed_rpm, _current_speed_rpm, delta_time);
+   // _duty_cycle = calculateWeightedValued(_duty_cycle, new_duty_cylce, 0.5f);
+   // setDutyCycle(_duty_cycle);
   }
 
 

@@ -82,6 +82,13 @@ public:
    */
   void UART_DMAReceiveCplt(const UART_HandleTypeDef* huart);
 
+  /**
+   * @brief Interrupt caused by speed pin
+   *
+   * @param GPIO_Pin
+   */
+  void HAL_GPIO_EXTI_Callback(const uint16_t GPIO_Pin);
+
 private:
 
   /**
