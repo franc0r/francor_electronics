@@ -35,7 +35,7 @@ namespace francor
 /* Defines -----------------------------------------------------------------------*/
 
 constexpr uint8_t CPU_CLOCK_MHZ             = 180u; //!< CPU Clock in MHz
-constexpr uint8_t POWER_STAGE_PWM_FREQ_KHz  = 20u;  //!< PS PWM frequency kHz
+constexpr uint8_t POWER_STAGE_PWM_FREQ_KHz  = 10u;  //!< PS PWM frequency kHz
 
 constexpr uint8_t NUM_DRIVES = 4u;  //!< Specifies the number of drives
 

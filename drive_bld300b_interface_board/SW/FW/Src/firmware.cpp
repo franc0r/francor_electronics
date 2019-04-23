@@ -109,6 +109,7 @@ void Firmware::init()
     motor.enable();
   }
 
+
 }
 
 void Firmware::update()
@@ -117,47 +118,53 @@ void Firmware::update()
 
   const uint32_t delta_time = HAL_GetTick() - rx_timestamp;
 
-  if(delta_time > 200u)
+  if(delta_time > 600u)
   {
-    for(auto& pwm : _pwm_list)
+    for(uint8_t idx = 0u; idx < NUM_DRIVES; idx++)
     {
-      pwm = 0.0f;
-    }
-  }
-
-  for(uint8_t idx = 0u; idx < NUM_DRIVES; idx++)
-  {
-    if(_pwm_list[idx] == 0.0f)
-    {
+      _pwm_list[idx] = 0.0f;
       _motor_list[idx].enableBrake();
       _motor_list[idx].setDutyCycle(0.0f);
     }
-    else
-    {
-      _motor_list[idx].disableBrake();
-      _motor_list[idx].setDutyCycle(_pwm_list[idx]);
-    }
   }
+
 
   HAL_UART_Receive(&huart2, (uint8_t*)rx_buffer, rx_buffer_size, 10u);
 
-  if(rx_buffer[0] != 0)
+  if(rx_buffer[0] == 'S' && rx_buffer[1] == 'P' && rx_buffer[2] == 'D' &&
+     rx_buffer[rx_buffer_size - 1] == '\n' && rx_buffer[rx_buffer_size - 2] == '\r')
   {
     int i1 = 0, i2 = 0, i3 = 0, i4 = 0;
     sscanf((char*)rx_buffer, "SPD %d %d %d %d\r\n", &i1, &i2, &i3, &i4);
 
     _pwm_list[0] = static_cast<float>(i1) * 0.01f;
-    _pwm_list[1] = static_cast<float>(i1) * 0.01f;
-    _pwm_list[2] = static_cast<float>(i1) * 0.01f;
-    _pwm_list[3] = static_cast<float>(i1) * 0.01f;
+    _pwm_list[1] = static_cast<float>(i2) * 0.01f;
+    _pwm_list[2] = static_cast<float>(i3) * 0.01f;
+    _pwm_list[3] = static_cast<float>(i4) * 0.01f;
 
     for(uint8_t idx = 0u; idx < rx_buffer_size; idx++)
     {
       rx_buffer[0] = 0u;
     }
 
+    for(uint8_t idx = 0u; idx < NUM_DRIVES; idx++)
+    {
+      if(_pwm_list[idx] == 0.0f)
+      {
+        _motor_list[idx].enableBrake();
+        _motor_list[idx].setDutyCycle(0.0f);
+      }
+      else
+      {
+        _motor_list[idx].disableBrake();
+        _motor_list[idx].setDutyCycle(_pwm_list[idx]);
+      }
+    }
+
     rx_timestamp = HAL_GetTick();
   }
+
+  HAL_Delay(10u);
 
 }
 
@@ -186,17 +193,6 @@ bool Firmware::initPowerStage(const uint8_t pwm_frequency_kHz,
 {
   /* Calculate bus clock */
   uint8_t bus_clock_MHz = cpu_clock_MHz;
-  switch(_power_stage_tim.Init.ClockDivision)
-  {
-    case TIM_CLOCKDIVISION_DIV2:
-    {
-      bus_clock_MHz = cpu_clock_MHz / 2u;
-    }break;
-    case TIM_CLOCKDIVISION_DIV4:
-    {
-      bus_clock_MHz = cpu_clock_MHz / 4u;
-    }break;
-  }
 
   /* Calculate prescaler and period of PWM timer */
   uint32_t period = 0u;

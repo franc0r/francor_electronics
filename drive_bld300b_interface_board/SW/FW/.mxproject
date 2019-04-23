@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Projekte/francor/francor_electronics/drive_bld300b_interface_board/SW/bld300b_interface/Inc
+HeaderPath=D:/Projekte/francor/francor_electronics/drive_bld300b_interface_board/SW/FW/Inc
 HeaderFiles=stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
-SourcePath=C:/Projekte/francor/francor_electronics/drive_bld300b_interface_board/SW/bld300b_interface/Src
+SourcePath=D:/Projekte/francor/francor_electronics/drive_bld300b_interface_board/SW/FW/Src
 SourceFiles=stm32f4xx_it.c;stm32f4xx_hal_msp.c;main.c;stm32f4xx_hal_timebase_tim.c;
 
 [PreviousLibFiles]

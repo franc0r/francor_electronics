@@ -1,6 +1,6 @@
 <launch>
   <node name="bld300b_interface" pkg="francor_bld300b_interface" type="bld300b_interface_node.py" output="screen" >
-    <param name="serial_device" value="/dev/ttyS8" type="str" />
-    <param name="timeout" value="0.8" type="double" />
+    <param name="serial_device" value="/dev/ttyS13" type="str" />
+    <param name="timeout" value="0.1" type="double" />
   </node>
 </launch>
