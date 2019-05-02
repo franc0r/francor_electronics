@@ -68,19 +68,29 @@ public:
   void update(void);
 
   /**
+   * @brief Sets the speed to the desired drive
+   *
+   * @param drive_id ID of the drive
+   * @param speed Speed in rpm
+   */
+  void setSpeed(const uint8_t drive_id, const float speed);
+
+  /**
+   * @brief Gets the current speed in RPM
+   *
+   * @param drive_id ID of the drive
+   *
+   * @return Current speed in RPM
+   */
+  const float getSpeet(const uint8_t drive_id);
+
+  /**
    * @brief Callback function for CCR interrupt
    *
    * @param htim Handle of timer which triggered the interrupt
    *
    */
   void HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef* htim);
-
-  /**
-   * @brief Callback function DMA receive complete
-   *
-   * @param huart
-   */
-  void UART_DMAReceiveCplt(const UART_HandleTypeDef* huart);
 
   /**
    * @brief Interrupt caused by speed pin
@@ -114,6 +124,9 @@ private:
   std::array<float, NUM_DRIVES> _pwm_list; //!< List containing desired pwm
 
   float               _delta_time;  //!< Delta time in update loop since last call
+  uint32_t            _set_spd_timestamp; //!< Timestamp set speed was called
+
+  bool                _is_initialized;  //!< True if class is initialized
 
 };
 
@@ -123,32 +136,5 @@ private:
 /*! @} End of francor */
 
 #endif /* __cplusplus */
-
-/* Public functions --------------------------------------------------------------*/
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** @addtogroup francor_c_interface
- * @{
- */
-//! FRANCOR public functions C API
-
-/**
- * @brief Initializes the firmware and calls Firmware::init()
- */
-void Firmware_Init(void);
-
-/**
- * @brief Updates the firmware components (none blocking)
- */
-void Firmware_Update(void);
-
-/*! @} End of francor_c_interface */
-
-#ifdef __cplusplus
-}
-#endif
-/* -------------------------------------------------------------------------------*/
 
 #endif /* FIRMWARE_H_ */

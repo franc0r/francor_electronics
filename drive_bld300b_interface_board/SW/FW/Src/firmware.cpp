@@ -12,9 +12,10 @@
 /* Includes ----------------------------------------------------------------------*/
 #include "main.h"
 #include "firmware.h"
+#include <ros.h>
 /* -------------------------------------------------------------------------------*/
 
-/* Private Variables -------------------------------------------------------------*/
+/* Extern Private Variables ------------------------------------------------------*/
 extern UART_HandleTypeDef huart2;
 
 extern TIM_HandleTypeDef htim1;
@@ -23,11 +24,10 @@ extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim8;
+/* -------------------------------------------------------------------------------*/
 
+/* Private Variables -------------------------------------------------------------*/
 francor::Firmware  g_firmware_handle = francor::Firmware(htim1);
-
-const static uint8_t rx_buffer_size = 33;
-volatile uint8_t rx_buffer[rx_buffer_size];
 /* -------------------------------------------------------------------------------*/
 
 /* Interrupt Functions -----------------------------------------------------------*/
@@ -37,29 +37,11 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
   g_firmware_handle.HAL_TIM_IC_CaptureCallback(htim);
 }
 
-void UART_DMAReceiveCplt(UART_HandleTypeDef* huart)
-{
-  g_firmware_handle.UART_DMAReceiveCplt(huart);
-}
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   g_firmware_handle.HAL_GPIO_EXTI_Callback(GPIO_Pin);
 }
 
-/* -------------------------------------------------------------------------------*/
-
-/* Public Functions --------------------------------------------------------------*/
-
-void Firmware_Init(void)
-{
-  g_firmware_handle.init();
-}
-
-void Firmware_Update(void)
-{
-  g_firmware_handle.update();
-}
 /* -------------------------------------------------------------------------------*/
 
 /* Class Public Functions --------------------------------------------------------*/
@@ -103,7 +85,9 @@ Firmware::Firmware(TIM_HandleTypeDef& power_stage_tim) :
                                  GPIOPin(M4_HB_GPIO_Port, M4_HB_Pin),
                                  GPIOPin(M4_HC_GPIO_Port, M4_HC_Pin))}),
                                  _pwm_list(),
-                                 _delta_time(0.0f)
+                                 _delta_time(0.0f),
+                                 _set_spd_timestamp(0u),
+                                 _is_initialized(false)
 {
 
 }
@@ -131,102 +115,67 @@ void Firmware::init()
     }
 
     /* Enable motor with brake */
-    //motor.enable();
+    motor.enable();
   }
 
-  _motor_list[0].enable();
-  _motor_list[0].disableBrake();
-  //_motor_list[0]._target_speed_rpm = 0.0f;
+  _is_initialized = true;
 }
 
 void Firmware::update()
 {
+  // Check if class is initialized
+  if(!_is_initialized) return;
+
   /* Update timestamp */
   updateDeltaTime();
 
-  static float timer_message = 0.0f;
-  timer_message += _delta_time;
-  if(timer_message > 0.1f)
+  // Check for timeout event
+  const uint32_t delta_set_spd = HAL_GetTick() - _set_spd_timestamp;
+  if(delta_set_spd > 200)
   {
-    char buffer[64];
-    const int32_t speed_h = static_cast<int32_t>(_motor_list[0]._current_speed_rpm);
-    const int32_t speed_l = abs(static_cast<int32_t>(_motor_list[0]._current_speed_rpm * 1000) % 1000);
-
-    sprintf(buffer, "Speed: %.3i.%.3i | %i\r\n", speed_h, speed_l, _motor_list[0]._direction);
-    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 10u);
-    timer_message = 0.0f;
+    for(auto& motor : _motor_list)
+    {
+      motor.enableBrake();
+      motor.setDutyCycle(0.0f);
+    }
   }
 
-  /* Update motor list */
-  for(Motorcontroller& motor : _motor_list)
+  for(auto& motor : _motor_list)
   {
     motor.update(_delta_time);
   }
+}
 
-  /*static uint32_t rx_timestamp = 0u;
+void Firmware::setSpeed(const uint8_t drive_id, const float speed)
+{
+  // Check if class is initialized
+  if(!_is_initialized) return;
 
-  const uint32_t delta_time = HAL_GetTick() - rx_timestamp;
+  if(drive_id >= NUM_DRIVES) return;
 
-  for(Motorcontroller& motor : _motor_list)
+  if(0.0f == speed)
   {
-    motor.update(static_cast<float>(delta_time) * 0.001f);
+    _motor_list[drive_id].enableBrake();
+    _motor_list[drive_id].setDutyCycle(0.0f);
+  }
+  else
+  {
+    _motor_list[drive_id].disableBrake();
+    _motor_list[drive_id].setDutyCycle(speed);
   }
 
-  static uint8_t state_old = 0U;
-  static int8_t dir_old = 0;
-  const uint8_t state_new = _motor_list[0]._hall_sensor_state;
-  const int8_t dir_new = _motor_list[0]._direction;
-  if(state_old != state_new || dir_old != dir_new)
-  {
-    char buffer[64];
-    sprintf(buffer, "Sensor value: %d %d %d | %d | Direction: %i\r\n", (state_new >> 2) & 0x01, (state_new >> 1) & 0x01, (state_new >> 0) & 0x01, state_new, dir_new);
-    HAL_UART_Transmit(&huart2, (uint8_t*)(buffer), strlen(buffer), 10u);
-    state_old = state_new;
-    dir_old = dir_new;
-  }*/
+  // Store timestamp
+  _set_spd_timestamp = HAL_GetTick();
+}
 
-  /*if(delta_time > 200u)
-  {
-    for(auto& pwm : _pwm_list)
-    {
-      pwm = 0.0f;
-    }
-  }
+const float Firmware::getSpeet(const uint8_t drive_id)
+{
+  // Check if class is initialized
+  if(!_is_initialized) return 0.0f;
 
-  for(uint8_t idx = 0u; idx < NUM_DRIVES; idx++)
-  {
-    if(_pwm_list[idx] == 0.0f)
-    {
-      _motor_list[idx].enableBrake();
-      _motor_list[idx].setDutyCycle(0.0f);
-    }
-    else
-    {
-      _motor_list[idx].disableBrake();
-      _motor_list[idx].setDutyCycle(_pwm_list[idx]);
-    }
-  }
+  if(drive_id >= NUM_DRIVES) return 0.0f;
 
-  HAL_UART_Receive(&huart2, (uint8_t*)rx_buffer, rx_buffer_size, 10u);
-
-  if(rx_buffer[0] != 0)
-  {
-    int i1 = 0, i2 = 0, i3 = 0, i4 = 0;
-    sscanf((char*)rx_buffer, "SPD %d %d %d %d\r\n", &i1, &i2, &i3, &i4);
-
-    _pwm_list[0] = static_cast<float>(i1) * 0.01f;
-    _pwm_list[1] = static_cast<float>(i1) * 0.01f;
-    _pwm_list[2] = static_cast<float>(i1) * 0.01f;
-    _pwm_list[3] = static_cast<float>(i1) * 0.01f;
-
-    for(uint8_t idx = 0u; idx < rx_buffer_size; idx++)
-    {
-      rx_buffer[0] = 0u;
-    }
-
-    rx_timestamp = HAL_GetTick();
-  }*/
-
+  return _motor_list[drive_id].getCurrentSpeedRPM();
 }
 
 void Firmware::HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef* htim)
@@ -238,10 +187,6 @@ void Firmware::HAL_TIM_IC_CaptureCallback(const TIM_HandleTypeDef* htim)
   }
 }
 
-void Firmware::UART_DMAReceiveCplt(const UART_HandleTypeDef* huart)
-{
-  /* Extract data */
-}
 
 void Firmware::HAL_GPIO_EXTI_Callback(const uint16_t GPIO_Pin)
 {

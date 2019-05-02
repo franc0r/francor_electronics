@@ -24,6 +24,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "firmware.h"
+
+#include <ros.h>
+#include <std_msgs/Float32.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,14 +53,17 @@ TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim8;
 
 UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_usart2_rx;
+DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
-
+extern francor::Firmware  g_firmware_handle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
@@ -66,11 +72,15 @@ static void MX_TIM4_Init(void);
 static void MX_TIM8_Init(void);
 static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void M1_SetSpd_Callback(const std_msgs::Float32& msg);
+static void M2_SetSpd_Callback(const std_msgs::Float32& msg);
+static void M3_SetSpd_Callback(const std_msgs::Float32& msg);
+static void M4_SetSpd_Callback(const std_msgs::Float32& msg);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+ros::NodeHandle   g_node_handle;
 /* USER CODE END 0 */
 
 /**
@@ -101,6 +111,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
@@ -110,17 +121,72 @@ int main(void)
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 
-  /* Init firmware */
-  Firmware_Init();
+  // Init ROS
+  g_node_handle.initNode();
+
+  // Create subscribers
+  ros::Subscriber<std_msgs::Float32> m1_set_spd_subs("/drive/m1/speed", &M1_SetSpd_Callback);
+  ros::Subscriber<std_msgs::Float32> m2_set_spd_subs("/drive/m2/speed", &M2_SetSpd_Callback);
+  ros::Subscriber<std_msgs::Float32> m3_set_spd_subs("/drive/m3/speed", &M3_SetSpd_Callback);
+  ros::Subscriber<std_msgs::Float32> m4_set_spd_subs("/drive/m4/speed", &M4_SetSpd_Callback);
+
+  // Create publishers
+  std_msgs::Float32 spd_msg;
+  std::array<ros::Publisher, 4> speed_pub_list({
+    ros::Publisher("drive/m1/current_speed", &spd_msg),
+    ros::Publisher("drive/m2/current_speed", &spd_msg),
+    ros::Publisher("drive/m3/current_speed", &spd_msg),
+    ros::Publisher("drive/m4/current_speed", &spd_msg)});
+
+  // Register subscribers
+  g_node_handle.subscribe(m1_set_spd_subs);
+  g_node_handle.subscribe(m2_set_spd_subs);
+  g_node_handle.subscribe(m3_set_spd_subs);
+  g_node_handle.subscribe(m4_set_spd_subs);
+
+  // Register publishers
+  for(auto& pub : speed_pub_list)
+  {
+    g_node_handle.advertise(pub);
+  }
+
+  // Init firmware
+  g_firmware_handle.init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t ros_tickstamp = HAL_GetTick();
+  uint32_t ros_pub_tickstamp = HAL_GetTick();
   while (1)
   {
-    /* Update firmware */
-    Firmware_Update();
+    // Update firmware
+    g_firmware_handle.update();
+
+
+    // Check if messages has to be published
+    const uint32_t delta_tick_pub = HAL_GetTick() - ros_pub_tickstamp;
+    if(delta_tick_pub >= 50)
+    {
+      ros_pub_tickstamp = HAL_GetTick();
+
+      uint8_t drive_id = 0u;
+      for(auto& pub : speed_pub_list)
+      {
+        spd_msg.data = g_firmware_handle.getSpeet(drive_id++);
+        pub.publish(&spd_msg);
+      }
+    }
+
+
+    // Check if ROS has to be updated
+    const uint32_t delta_tick_ros = HAL_GetTick() - ros_tickstamp;
+    if(delta_tick_ros > 1)
+    {
+      ros_tickstamp = HAL_GetTick();
+      g_node_handle.spinOnce();
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -198,7 +264,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 4500;
+  htim1.Init.Prescaler = 4500-1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 3000;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
@@ -275,7 +341,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 4500;
+  htim2.Init.Prescaler = 4500-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 60000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
@@ -319,7 +385,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 4500;
+  htim3.Init.Prescaler = 4500-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 60000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
@@ -363,7 +429,7 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 4500;
+  htim4.Init.Prescaler = 4500-1;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = 60000;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
@@ -407,9 +473,9 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 1 */
   htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 45;
+  htim5.Init.Prescaler = 45-1;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 4294967295;
+  htim5.Init.Period = 0xffffffff;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
@@ -494,7 +560,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 1000000;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -508,6 +574,24 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
+  /* DMA1_Stream6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
 
 }
 
@@ -606,7 +690,35 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void M1_SetSpd_Callback(const std_msgs::Float32& msg)
+{
+  g_firmware_handle.setSpeed(0, msg.data);
+}
 
+static void M2_SetSpd_Callback(const std_msgs::Float32& msg)
+{
+  g_firmware_handle.setSpeed(1, msg.data);
+}
+
+static void M3_SetSpd_Callback(const std_msgs::Float32& msg)
+{
+  g_firmware_handle.setSpeed(2, msg.data);
+}
+
+static void M4_SetSpd_Callback(const std_msgs::Float32& msg)
+{
+  g_firmware_handle.setSpeed(3, msg.data);
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  g_node_handle.getHardware()->flush();
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  g_node_handle.getHardware()->reset_rbuf();
+}
 /* USER CODE END 4 */
 
 /**
