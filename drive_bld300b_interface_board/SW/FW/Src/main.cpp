@@ -629,7 +629,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : M1_SPD_Pin M2_SPD_Pin M3_SPD_Pin M4_SPD_Pin */
   GPIO_InitStruct.Pin = M1_SPD_Pin|M2_SPD_Pin|M3_SPD_Pin|M4_SPD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : M3_EN_Pin LD2_Pin M2_DIR_Pin */
